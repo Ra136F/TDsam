@@ -1,23 +1,26 @@
-from numba import cuda
-import pandas as pd
-import time
 import numpy as np
-import glob
+from numba import njit, prange
+import pandas as pd
 import os
+import time
+import glob
 
-def TDSam_cuda(D, r, D_kp, n):
-    i = cuda.grid(1)
-    if 1 <= i < n - 1:
-        # 判断是否为极大值或极小值
-        if (D[i - 1] < D[i] > D[i + 1] or D[i - 1] > D[i] < D[i + 1]):
+@njit(parallel=True)
+def TDSam_numba(D, r):
+    n = len(D)
+    D_kp = np.zeros(n, dtype=np.float32)
+
+    for i in prange(1, n - 1):  # prange 用于并行化循环
+        # 判断是否为局部极大值或极小值
+        if (D[i - 1] < D[i] > D[i + 1]) or (D[i - 1] > D[i] < D[i + 1]):
             if D[i] > D[i + 1] + r and D[i] > D[i - 1] + r:
                 D_kp[i] = D[i]
             elif D[i] < D[i + 1] - r and D[i] < D[i - 1] - r:
                 D_kp[i] = D[i]
-        elif abs(D[i + 1] - 2 * D[i] + D[i - 1]) > r:
-             D_kp[i] = D[i]
-        else:
-            D_kp[i] = 0  # 不符合条件，填充为 0（可以视为无效点）
+            elif abs(D[i + 1] - 2 * D[i] + D[i - 1]) > r:
+                D_kp[i] = D[i]
+
+    return D_kp
 
 folder_path = './0'
 all_files = glob.glob(os.path.join(folder_path, "*.csv"))

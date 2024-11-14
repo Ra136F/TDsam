@@ -15,8 +15,8 @@ def TDSam(data,  r):
                 D_kp.append(D[i])
             elif D[i] < D[i + 1] - r and D[i] < D[i - 1] - r:
                 D_kp.append(D[i])
-            elif abs(D[i + 1] - 2 * D[i] + D[i - 1]) > r:
-                D_kp.append(D[i])
+        elif abs(D[i + 1] - 2 * D[i] + D[i - 1]) > r:
+             D_kp.append(D[i])
 
     return D_kp
 
