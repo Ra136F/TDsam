@@ -36,7 +36,7 @@ df_combined = pd.concat(df_list, ignore_index=True)
 # adjacent_diffs =df_combined['P-TPT'].diff().abs().iloc[1:]
 # min_adjacent_diff = adjacent_diffs[adjacent_diffs != 0].min()
 start_time = time.time()
-D_kp=TDSam(df_combined,20)
+D_kp=TDSam(df_combined,10)
 end_time = time.time()
 execution_time = end_time - start_time
 print(f"TDSam 算法执行时间: {execution_time:.6f} 秒")

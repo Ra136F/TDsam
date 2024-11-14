@@ -5,6 +5,7 @@ import numpy as np
 import glob
 import os
 
+@cuda.jit
 def TDSam_cuda(D, r, D_kp, n):
     i = cuda.grid(1)
     if 1 <= i < n - 1:
@@ -28,5 +29,23 @@ df_combined = pd.concat(df_list, ignore_index=True)
 D = df_combined['P-TPT'].values
 n = len(D)
 D_kp = np.zeros_like(D)
-threads_per_block = 32
+threads_per_block = 512
 blocks_per_grid = (n + (threads_per_block - 1)) // threads_per_block
+
+
+start_time = time.time()
+D_device = cuda.to_device(D)
+D_kp_device = cuda.to_device(D_kp)
+TDSam_cuda[blocks_per_grid, threads_per_block](D_device, 10, D_kp_device, n)
+cuda.synchronize()
+D_kp=D_kp_device.copy_to_host()
+end_time = time.time()
+
+execution_time = end_time - start_time
+
+print(f"TDSam CUDA 加速算法执行时间: {execution_time:.6f} 秒")
+
+# 将非零结果转换为 DataFrame 并显示
+result_df = pd.DataFrame({'column_name': D_kp[D_kp != 0]})
+# print(len(D_kp))
+print(len(result_df))

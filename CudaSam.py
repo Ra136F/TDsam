@@ -1,3 +1,5 @@
+
+
 from numba import cuda
 import pandas as pd
 import time
@@ -6,7 +8,6 @@ import numpy as np
 @cuda.jit
 def TDSam_cuda(D, r, D_kp, n):
     i = cuda.grid(1)
-
     if 1 <= i < n - 1:
         # 判断是否为极大值或极小值
         if (D[i - 1] < D[i] > D[i + 1] or D[i - 1] > D[i] < D[i + 1]):
@@ -28,15 +29,19 @@ D_kp = np.zeros_like(D)
 
 threads_per_block = 32
 blocks_per_grid = (n + (threads_per_block - 1)) // threads_per_block
+D_device = cuda.to_device(D)
+D_kp_device = cuda.to_device(D_kp)
 
 start_time = time.time()
-TDSam_cuda[blocks_per_grid, threads_per_block](D, 0.28, D_kp, n)
+TDSam_cuda[blocks_per_grid, threads_per_block](D_device, 0.28, D_kp_device, n)
 cuda.synchronize()
 end_time = time.time()
 
 execution_time = end_time - start_time
+D_kp=D_kp_device.copy_to_host()
 print(f"TDSam CUDA 加速算法执行时间: {execution_time:.6f} 秒")
 
 # 将非零结果转换为 DataFrame 并显示
 result_df = pd.DataFrame({'column_name': D_kp[D_kp != 0]})
-print(result_df)
+# print(len(D_kp))
+print(len(result_df))
