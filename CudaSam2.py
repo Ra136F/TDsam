@@ -59,4 +59,5 @@ result_df = pd.DataFrame({
     'P-TPT': D_kp[D_kp != 0]  # 只保留非零的 P-TPT 关键点
 })
 # print(len(D_kp)
-print(len(result_df))
+print(f'原始数据条数:{len(df_combined)}')
+print(f'采样后数据条数:{len(result_df)}')
