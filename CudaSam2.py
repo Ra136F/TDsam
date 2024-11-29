@@ -28,11 +28,13 @@ def TDSam_cuda(D, r, D_kp, n):
 
 folder_path = './0'
 all_files = glob.glob(os.path.join(folder_path, "*.csv"))
-columns_to_read = ['P-TPT']
+columns_to_read = ['timestamp','P-TPT']
 df_list = [pd.read_csv(file,usecols=columns_to_read) for file in all_files]
 df_combined = pd.concat(df_list, ignore_index=True)
-
+# print(df_combined.head())
 D = df_combined['P-TPT'].values
+timestamps = df_combined['timestamp'].values  # 保留时间戳列
+# print(D)
 n = len(D)
 D_kp = np.zeros_like(D)
 threads_per_block = 512
@@ -52,7 +54,10 @@ execution_time = end_time - start_time
 print(f"TDSam CUDA 加速算法执行时间: {execution_time:.6f} 秒")
 
 # 将非零结果转换为 DataFrame 并显示
-result_df = pd.DataFrame({'column_name': D_kp[D_kp != 0]})
+result_df = pd.DataFrame({
+    'timestamp': timestamps[D_kp != 0],  # 保留 timestamp 对应非零 P-TPT
+    'P-TPT': D_kp[D_kp != 0]  # 只保留非零的 P-TPT 关键点
+})
 # print(len(D_kp))
 
 print(len(result_df))
