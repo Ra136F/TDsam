@@ -53,9 +53,8 @@ execution_time = end_time - start_time
 
 print(f"TDSam CUDA 加速算法执行时间: {execution_time:.6f} 秒")
 
-# 将非零结果转换为 DataFrame 并显示
 result_df = pd.DataFrame({
-    'timestamp': timestamps[D_kp != 0],  # 保留 timestamp 对应非零 P-TPT
+    'timestamp': timestamps[D_kp != 0],
     'P-TPT': D_kp[D_kp != 0]  # 只保留非零的 P-TPT 关键点
 })
 # print(len(D_kp)
