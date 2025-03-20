@@ -8,7 +8,6 @@ import datetime
 import string
 import multiprocessing
 import threading, queue
-
 import numpy as np
 import pandas as pd
 import psutil
@@ -19,32 +18,7 @@ from datetime import datetime
 import TDSam2
 import argparse
 
-def data_loading(folder_path,target):
-    all_files = glob.glob(os.path.join(folder_path, '**', '*.csv'), recursive=True)
-    if not all_files:
-        raise FileNotFoundError(f"No CSV files found in folder: {folder_path}")
-    # 读取所有文件并合并
-    df_list = [pd.read_csv(file).fillna(0) for file in all_files]
-    df_combined = pd.concat(df_list, ignore_index=True)
-    print(f"原始数据条数: {len(df_combined)}")
-    D = df_combined[target].values
-    r = calculate_delta(D)
-    print(f"δ is {r}")
-    return df_combined,r
-
-def calculate_delta(data):
-    data = np.asarray(data)
-    data = np.nan_to_num(data, nan=0.0)
-    # 计算相邻数据点的差值
-    differences = np.diff(data)
-    # 取绝对值，忽略方向
-    differences = np.abs(differences)
-    non_zero_differences = differences[differences > 0]
-    # 检查是否有非零差值
-    if non_zero_differences.size == 0:
-        raise ValueError("时间序列数据的所有相邻差值均为 0，无法计算 δ 值")
-    delta_value = np.min(non_zero_differences)
-    return delta_value
+from util import data_loading
 
 
 # def process_csv_files(folder_path, target,mode):
@@ -88,12 +62,15 @@ def calculate_delta(data):
 
 
 
-def send_to_server(result_df, url,data_name,target):
+def send_to_server(result_df, url,data_name,target,gen_len,count,last_dtw):
     # 转换 DataFrame 为 JSON 格式
     result_json = {
         "data_name": data_name,
         "target": target,
-        "result_data": result_df.to_dict(orient='records')
+        "result_data": result_df.to_dict(orient='records'),
+        "length": gen_len, #生成数据的长度
+        "count": count,
+        "last_dtw": last_dtw
     }
     # 发送 POST 请求
     try:
@@ -123,44 +100,87 @@ def execute_sample(data,args,r):
     diff_len = n - len(result)
     print(f"减少了: {diff_len}")
     result = pd.DataFrame(result, columns=[args.target])
-    return result, execution_time
+    return result, execution_time, diff_len
 
 
 #找到数据集最佳采样点
-def find_delta(data, args,r):
+def find_best(folder_path, args):
+    data, s_min, s_max = data_loading(folder_path, args.target)
+    # data = data[:int(0.05*len(data))]
     is_done=False
-    final_r=r
-    url=args.url+'adjust'
+    final_r=0
+    url= args.url + 'adjust'
     count=1
+    last_dtw=1e10
     while not is_done:
-        sample_data,execution_time=execute_sample(data,args,final_r)
+        sample_data,execution_time,diff_len=execute_sample(data, args, final_r)
         print(f'第{count}次传输开始...,采样率是{final_r}')
-        resp_data, transfer_time=send_to_server(sample_data,url,args.data_name,args.target)
-        if resp_data.get('isAdjust')==1:
-            final_r+=r
+        resp_data, transfer_time=send_to_server(sample_data, url, args.data_name, args.target,diff_len,count,last_dtw)
+        if resp_data.get('isAdjust')==1 and final_r<=s_max:
+            final_r+=s_min
+            last_dtw=resp_data.get("last_dtw")
         else:
+            final_r-=s_min
             is_done=True
         count+=1
     return final_r
+#自适应调整
+def send_to_server2(folder_path,args,r):
+    data, s_min, s_max = data_loading(folder_path, args.target)
+    transfer_time=0
+    resp_data=0
+    count=1
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        df = pd.read_csv(file_path)
+        data,execution_time,diff_len=execute_sample(df[args.target].values, args,r)
+        #传输到云端,定期传输原始数据检测相似度
+        # resp_data, transfer_time=send_to_server(data,args.url,args.data_name,args.target)
+        if count==10:
+            count=1
+        else:
+            count+=1
+        if r!=0:
+            r-=s_min
 
+    return resp_data, transfer_time
+
+
+def main(args):
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print("当前时间:", formatted_time)
+    folder_path = './data' + '/' + args.data_name + '/9'
+    # data, r_min, r_max = data_loading(folder_path, args.target)  # 加载数据,计算δ
+    send_ori(args)
+    # r = find_best(folder_path , args)
+    # print(f'最终的λ:{r}')
+    # send_to_server2(folder_path,args,r)
+
+
+#传输原始数据
+def send_ori(args):
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    print("当前时间:", formatted_time)
+    folder_path = './data' + '/' + args.data_name
+    data, r_min, r_max = data_loading(folder_path, args.target)  # 加载数据,计算δ
+    data= pd.DataFrame(data, columns=[args.target])
+    # data = data[:int(0.5*len(data))]
+    resp_data, transfer_time=send_to_server(data,args.url+'upload',args.data_name,args.target,0,0,0)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
-    parser.add_argument('-data_name', type=str, default='oil-well', help="数据集名称")
-    parser.add_argument('-target', type=str, default='P-TPT', help="目标特征")
+    parser.add_argument('-data_name', type=str, default='energy', help="数据集名称")
+    parser.add_argument('-target', type=str, default='T1', help="目标特征")
     parser.add_argument('-mode', type=int, default=0, help="[0,1],不适用GPU、使用GPU")
     parser.add_argument('-url', type=str, default='http://10.12.54.122:5001/', help="服务器地址")
     args = parser.parse_args()
-
+    main(args)
+    # send_ori(args)
     # 获取当前时间
-    current_time = datetime.now()
-    formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-    print("当前时间:", formatted_time)
-    folder_path = './data'+'/'+args.data_name+'/0'
-    data,r= data_loading(folder_path,args.target) #加载数据,计算δ
-    r=find_delta(data[args.target].values,args,r)
-    print(f'最终的λ:{r}')
+
     # main2()
 
 

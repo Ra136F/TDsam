@@ -1,4 +1,8 @@
+import glob
+import os
+
 import numpy as np
+import pandas as pd
 from fastdtw import fastdtw
 from scipy.spatial.distance import euclidean
 
@@ -33,5 +37,33 @@ def dtw_distance(seq1, seq2):
 
 
 
+def data_loading(folder_path,target):
+    all_files = glob.glob(os.path.join(folder_path, '**', '*.csv'), recursive=True)
+    if not all_files:
+        raise FileNotFoundError(f"No CSV files found in folder: {folder_path}")
+    # 读取所有文件并合并
+    df_list = [pd.read_csv(file).fillna(0) for file in all_files]
+    df_combined = pd.concat(df_list, ignore_index=True)
+    print(f"原始数据条数: {len(df_combined)}")
+    D = df_combined[target].values
+    min,max = calculate_gap(D)
+    print(f'最大是:{max},最小是{min}')
+    return D,min,max
+
+#寻找相邻数据点的最小、最大差值
+def calculate_gap(data):
+    data = np.asarray(data)
+    data = np.nan_to_num(data, nan=0.0)
+    # 计算相邻数据点的差值
+    differences = np.diff(data)
+    # 取绝对值，忽略方向
+    differences = np.abs(differences)
+    non_zero_differences = differences[differences > 0]
+    # 检查是否有非零差值
+    if non_zero_differences.size == 0:
+        raise ValueError("时间序列数据的所有相邻差值均为 0，无法计算 δ 值")
+    min = np.min(non_zero_differences)
+    max = np.max(non_zero_differences)
+    return min,max
 
 
