@@ -62,7 +62,7 @@ from util import data_loading
 
 
 
-def send_to_server(result_df, url,data_name,target,gen_len,count,last_dtw):
+def send_to_server(result_df, url,data_name,target,gen_len,count,last_dtw=0):
     # 转换 DataFrame 为 JSON 格式
     result_json = {
         "data_name": data_name,
@@ -127,35 +127,40 @@ def find_best(folder_path, args):
 #自适应调整
 def send_to_server2(folder_path,args,r):
     data, s_min, s_max = data_loading(folder_path, args.target)
-    transfer_time=0
+    s_min=0.005
+    s_max=0.25
     resp_data=0
-    count=1
-    for filename in os.listdir(folder_path):
-        file_path = os.path.join(folder_path, filename)
-        df = pd.read_csv(file_path)
-        data,execution_time,diff_len=execute_sample(df[args.target].values, args,r)
-        #传输到云端,定期传输原始数据检测相似度
-        # resp_data, transfer_time=send_to_server(data,args.url,args.data_name,args.target)
-        if count==10:
-            count=1
-        else:
-            count+=1
-        if r!=0:
-            r-=s_min
-
-    return resp_data, transfer_time
+    count=0
+    total_rows=len(data)
+    batch_rows=int(0.05*total_rows)
+    start_time = time.time()
+    for i in range(0,total_rows,batch_rows):
+        batch_data=data[i:i+batch_rows]
+        sample_data,execution_time,diff_len=execute_sample(batch_data[args.target].values, args, r)
+        resp_data, transfer_time=send_to_server(sample_data, args.url+'/upload', args.data_name, args.target,diff_len,count)
+        count+=1
+    print(count)
+    end_time = time.time()
+    print(f'分段发送共耗时:{(end_time-start_time):.4f}s')
+    start_time = time.time()
+    sample_data, execution_time, diff_len = execute_sample(data[args.target].values, args, r)
+    resp_data, transfer_time = send_to_server(sample_data, args.url + '/upload', args.data_name, args.target, diff_len,
+                                              count)
+    end_time = time.time()
+    print(f'总发送耗时:{(end_time-start_time):.4f}s')
+    return resp_data
 
 
 def main(args):
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print("当前时间:", formatted_time)
-    folder_path = './data' + '/' + args.data_name + '/9'
+    folder_path = './data' + '/' + args.data_name+'/9'
     # data, r_min, r_max = data_loading(folder_path, args.target)  # 加载数据,计算δ
-    send_ori(args)
+    # send_ori(args)
     # r = find_best(folder_path , args)
     # print(f'最终的λ:{r}')
-    # send_to_server2(folder_path,args,r)
+    send_to_server2(folder_path,args,20)
 
 
 #传输原始数据
@@ -163,7 +168,7 @@ def send_ori(args):
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print("当前时间:", formatted_time)
-    folder_path = './data' + '/' + args.data_name
+    folder_path = './data' + '/' + args.data_name+'/9'
     data, r_min, r_max = data_loading(folder_path, args.target)  # 加载数据,计算δ
     # data= pd.DataFrame(data, columns=[args.target])
     # data = data[:int(0.5*len(data))]
@@ -172,8 +177,8 @@ def send_ori(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
-    parser.add_argument('-data_name', type=str, default='energy', help="数据集名称")
-    parser.add_argument('-target', type=str, default='T1', help="目标特征")
+    parser.add_argument('-data_name', type=str, default='oil-well', help="数据集名称")
+    parser.add_argument('-target', type=str, default='P-TPT', help="目标特征")
     parser.add_argument('-mode', type=int, default=0, help="[0,1],不适用GPU、使用GPU")
     parser.add_argument('-url', type=str, default='http://10.12.54.122:5001/', help="服务器地址")
     args = parser.parse_args()
