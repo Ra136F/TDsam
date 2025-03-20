@@ -48,7 +48,7 @@ def data_loading(folder_path,target):
     D = df_combined[target].values
     min,max = calculate_gap(D)
     print(f'最大是:{max},最小是{min}')
-    return D,min,max
+    return df_combined,min,max
 
 #寻找相邻数据点的最小、最大差值
 def calculate_gap(data):

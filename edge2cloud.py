@@ -165,7 +165,7 @@ def send_ori(args):
     print("当前时间:", formatted_time)
     folder_path = './data' + '/' + args.data_name
     data, r_min, r_max = data_loading(folder_path, args.target)  # 加载数据,计算δ
-    data= pd.DataFrame(data, columns=[args.target])
+    # data= pd.DataFrame(data, columns=[args.target])
     # data = data[:int(0.5*len(data))]
     resp_data, transfer_time=send_to_server(data,args.url+'upload',args.data_name,args.target,0,0,0)
 
