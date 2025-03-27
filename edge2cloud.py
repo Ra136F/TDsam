@@ -10,7 +10,6 @@ import multiprocessing
 import threading, queue
 import numpy as np
 import pandas as pd
-import psutil
 import operator, random
 # import settings
 import requests
