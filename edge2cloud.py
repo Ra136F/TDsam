@@ -155,12 +155,12 @@ def main(args):
     current_time = datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
     print("当前时间:", formatted_time)
-    folder_path = './data' + '/' + args.data_name+'/9'
+    folder_path = './data' + '/' + args.data_name
     # data, r_min, r_max = data_loading(folder_path, args.target)  # 加载数据,计算δ
     # send_ori(args)
     # r = find_best(folder_path , args)
     # print(f'最终的λ:{r}')
-    send_to_server2(folder_path,args,20)
+    send_to_server2(folder_path,args,0.05)
 
 
 #传输原始数据
@@ -177,8 +177,8 @@ def send_ori(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
-    parser.add_argument('-data_name', type=str, default='oil-well', help="数据集名称")
-    parser.add_argument('-target', type=str, default='P-TPT', help="目标特征")
+    parser.add_argument('-data_name', type=str, default='energy', help="数据集名称")
+    parser.add_argument('-target', type=str, default='T1', help="目标特征")
     parser.add_argument('-mode', type=int, default=0, help="[0,1],不适用GPU、使用GPU")
     parser.add_argument('-url', type=str, default='http://10.12.54.122:5001/', help="服务器地址")
     args = parser.parse_args()
