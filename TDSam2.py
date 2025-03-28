@@ -18,21 +18,32 @@ def TDSam(D, r, n):
     n (int): 数据长度
     """
     result=list()
+    # for i in range(n):
+    #     if i == 0:
+    #         result.append(D[i])
+    #     elif i == n - 1:
+    #         result.append(D[i])
+    #     elif 1 <= i < n - 1:
+    #         if D[i - 1] < D[i] > D[i + 1] or D[i - 1] > D[i] < D[i + 1]:
+    #             if D[i] > D[i + 1] + r and D[i] > D[i - 1] + r:
+    #                 result.append(D[i])
+    #             elif D[i] < D[i + 1] - r and D[i] < D[i - 1] - r:
+    #                 result.append(D[i])
+    #         elif abs(D[i + 1] - 2 * D[i] + D[i - 1]) > r:
+    #             result.append(D[i])
+    # result=np.array(result)
+    indices = []
     for i in range(n):
-        if i == 0:
-            result.append(D[i])
-        elif i == n - 1:
-            result.append(D[i])
+        if i == 0 or i == n - 1:
+            indices.append(i)
         elif 1 <= i < n - 1:
+            # 原函数的判断逻辑，但记录索引 i
             if D[i - 1] < D[i] > D[i + 1] or D[i - 1] > D[i] < D[i + 1]:
-                if D[i] > D[i + 1] + r and D[i] > D[i - 1] + r:
-                    result.append(D[i])
-                elif D[i] < D[i + 1] - r and D[i] < D[i - 1] - r:
-                    result.append(D[i])
+                if (D[i] > D[i + 1] + r and D[i] > D[i - 1] + r) or (D[i] < D[i + 1] - r and D[i] < D[i - 1] - r):
+                    indices.append(i)
             elif abs(D[i + 1] - 2 * D[i] + D[i - 1]) > r:
-                result.append(D[i])
-    result=np.array(result)
-    return result
+                indices.append(i)
+    return np.array(indices)
 
 
 

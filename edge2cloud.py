@@ -88,18 +88,18 @@ def send_to_server(result_df, url,data_name,target,gen_len,count,last_dtw=0):
         return None
 
 def execute_sample(data,args,r):
-    data = np.asarray(data)
+    D=np.asarray(data[args.target].values)
     n = len(data)
     start_time = time.time()
-    result=TDSam2.TDSam(data, r, n)
+    result=TDSam2.TDSam(D, r, n)
     end_time = time.time()
     execution_time = end_time - start_time
     # 输出采样前后数据条数
     print(f"采样后数据条数: {len(result)}")
     diff_len = n - len(result)
     print(f"减少了: {diff_len}")
-    result = pd.DataFrame(result, columns=[args.target])
-    return result, execution_time, diff_len
+    result_df = data.iloc[result].reset_index(drop=True)
+    return result_df, execution_time, diff_len
 
 
 #找到数据集最佳采样点
@@ -135,14 +135,14 @@ def send_to_server2(folder_path,args,r):
     start_time = time.time()
     for i in range(0,total_rows,batch_rows):
         batch_data=data[i:i+batch_rows]
-        sample_data,execution_time,diff_len=execute_sample(batch_data[args.target].values, args, r)
+        sample_data,execution_time,diff_len=execute_sample(batch_data, args, r)
         resp_data, transfer_time=send_to_server(sample_data, args.url+'/upload', args.data_name, args.target,diff_len,count)
         count+=1
     print(count)
     end_time = time.time()
     print(f'分段发送共耗时:{(end_time-start_time):.4f}s')
     start_time = time.time()
-    sample_data, execution_time, diff_len = execute_sample(data[args.target].values, args, r)
+    sample_data, execution_time, diff_len = execute_sample(data, args, r)
     resp_data, transfer_time = send_to_server(sample_data, args.url + '/upload', args.data_name, args.target, diff_len,
                                               count)
     end_time = time.time()
