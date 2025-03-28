@@ -156,10 +156,10 @@ def main(args):
     print("当前时间:", formatted_time)
     folder_path = './data' + '/' + args.data_name
     # data, r_min, r_max = data_loading(folder_path, args.target)  # 加载数据,计算δ
-    send_ori(args)
+    # send_ori(args)
     # r = find_best(folder_path , args)
     # print(f'最终的λ:{r}')
-    # send_to_server2(folder_path,args,0.05)
+    send_to_server2(folder_path,args,0.05)
 
 
 #传输原始数据
