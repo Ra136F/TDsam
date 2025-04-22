@@ -118,7 +118,7 @@ def group_compress(compressOption):
             sampleid = getsample(item)
             print(sampleid)
             print("-------------------------")
-            selectedCompressOption = policy_engine(sampleid, suppoted_compressors, '以太网 2', 1)
+            selectedCompressOption = policy_engine(sampleid, suppoted_compressors, 'wlan0', 1)
             print("-------------------------")
             print('Best compressor for {} based on sample {}: {}'.format(item, sampleid, selectedCompressOption))
         elif compressOption == 'random':
