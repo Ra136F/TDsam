@@ -44,10 +44,10 @@ def data_loading(folder_path,target):
     # 读取所有文件并合并
     df_list = [pd.read_csv(file).fillna(0) for file in all_files]
     df_combined = pd.concat(df_list, ignore_index=True)
-    print(f"原始数据条数: {len(df_combined)}")
+
     D = df_combined[target].values
     min,max = calculate_gap(D)
-    print(f'最大是:{max},最小是{min}')
+
     return df_combined,min,max
 
 #寻找相邻数据点的最小、最大差值
