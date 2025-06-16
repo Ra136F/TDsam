@@ -1,4 +1,6 @@
 import glob
+import http
+import json
 import os
 
 import numpy as np
@@ -50,6 +52,21 @@ def data_loading(folder_path,target):
 
     return df_combined,min,max
 
+def data_loading_aper(folder_path):
+    all_files = glob.glob(os.path.join(folder_path, '**', '*.csv'), recursive=True)
+    if not all_files:
+        raise FileNotFoundError(f"No CSV files found in folder: {folder_path}")
+    # 读取所有文件并合并
+    # dfs = [pd.read_csv(file, sep=';', header=None, names=['date', 'avg_1s', 'avg_8s']) for file in all_files]
+    # df_combined = pd.concat(dfs, ignore_index=True)
+    df_list = [pd.read_csv(file).fillna(0) for file in all_files]
+    df_combined = pd.concat(df_list, ignore_index=True)
+
+    D = df_combined['T-JUS-CKP'].values
+    min, max = calculate_gap(D)
+
+    return df_combined, min, max
+
 #寻找相邻数据点的最小、最大差值
 def calculate_gap(data):
     data = np.asarray(data)
@@ -66,4 +83,39 @@ def calculate_gap(data):
     max = np.max(non_zero_differences)
     return min,max
 
+
+def MinMaxScaler(data):
+    numerator = data - np.min(data, 0)
+    denominator = np.max(data, 0) - np.min(data, 0)
+    norm_data = numerator / (denominator + 1e-7)
+    return norm_data, np.min(data, 0), np.max(data, 0)
+
+def getMinMax(data,target):
+    data=data.drop(columns=['date', 'timestamp'], errors='ignore')
+    cols = list(data.columns)
+    cols.remove(target)
+    data = data[cols+[target]]
+    data, min, max = MinMaxScaler(np.array(data[target]))
+    return min, max
+
+
+def send2server(host,port,send_json,endpoint="/"):
+
+    try:
+        payload = send_json
+        body = json.dumps(payload).encode('utf-8')
+        # 配置HTTP请求
+        headers = {
+            "Content-Type": "application/json",
+            "Content-Length": str(len(body))
+        }
+        conn = http.client.HTTPConnection(host, port, timeout=600)
+        conn.request("POST", endpoint, body=body, headers=headers)
+        response = conn.getresponse()
+        # print(f"状态码: {response.status}")
+        # print(f"响应内容: {response.read().decode()}")
+    except Exception as e:
+        print(f"请求失败: {e}")
+    finally:
+        conn.close()
 
