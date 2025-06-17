@@ -40,12 +40,11 @@ def dtw_distance(seq1, seq2):
 
 
 def data_loading(folder_path,target):
-    all_files = glob.glob(os.path.join(folder_path, '**', '*.csv'), recursive=True)
-    if not all_files:
-        raise FileNotFoundError(f"No CSV files found in folder: {folder_path}")
+    folder_path = folder_path+".csv"
     # 读取所有文件并合并
-    df_list = [pd.read_csv(file).fillna(0) for file in all_files]
-    df_combined = pd.concat(df_list, ignore_index=True)
+    # df_list = [pd.read_csv(file).fillna(0) for file in all_files]
+    # df_combined = pd.concat(df_list, ignore_index=True)
+    df_combined=pd.read_csv(folder_path)
 
     D = df_combined[target].values
     min,max = calculate_gap(D)

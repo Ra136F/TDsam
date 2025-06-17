@@ -18,18 +18,21 @@ def sim_send(config):
     data, r_min, r_max = data_loading(folder_path, config.target)
     min,max=getMinMax(data,config.target)
     print(f'max{r_max},min:{r_min}')
-    sampler=TDSampler(initial_lambda=0.025)
+    sampler=TDSampler(initial_lambda=config.lambda_value)
     total_rows = len(data)
-    batch_rows = int(0.05* total_rows)
+    batch_rows = int(config.ratio* total_rows)
     count=0
     client=XenderMQTTClient(broker=config.ip)
     client.subscribe("xender/control")
     client.client.loop_start()
-
+    # batch_rows=160+128
     for i in range(0, total_rows, batch_rows):
         batch_data = data[i:i + batch_rows]
         result_iloc = sampler.find_key_points(batch_data[config.target].values)
         result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
+        # result_data = batch_data[:160]
+        if config.data_name=="oil-well":
+            result_data = batch_data[:int(len(batch_data)*0.6)]
         print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
         payload = {
             "metadata": {
