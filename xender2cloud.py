@@ -30,7 +30,7 @@ def xender_send(config):
         result_iloc = sampler.find_key_points(batch_data[config.target].values)
         result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
         print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
-        if count % 2 == 0 and count >4:
+        if count % 2 == 0 and count > 6:
             ori_data = batch_data
         else:
             ori_data = pd.DataFrame()
