@@ -7,7 +7,7 @@ from util import data_loading, data_loading_aper, MinMaxScaler
 
 if __name__=='__main__':
     data_name="oil-well"
-    folder_path = './data' + '/' + data_name+"/9"
+    folder_path = './data' + '/data/'
     data, r_min, r_max = data_loading_aper(folder_path)
     # cols=list(data.columns)
     # cols.remove('timestamp')
@@ -16,4 +16,4 @@ if __name__=='__main__':
     print(len(data))
     print(r_min)
     print(r_max)
-    data.to_csv("./data/oil-well.csv",index=False,columns=data.columns)
+    data.to_csv("./data/oil-well-1.csv",index=False,columns=data.columns)
