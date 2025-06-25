@@ -22,8 +22,8 @@ def xender_send(config):
     batch_rows = int(config.ratio * total_rows)
     count = 0
     client = XenderMQTTClient(broker="10.12.54.122")
-    client.subscribe("xender/control")
-    client.client.loop_start()
+    # client.subscribe("xender/control")
+    # client.client.loop_start()
     is_adjust = False
     for i in range(0, total_rows, batch_rows):
         batch_data = data[i:i + batch_rows]
@@ -59,19 +59,24 @@ def xender_send(config):
                 "min": json.dumps(min.tolist()),
                 "max": json.dumps(max.tolist())
             }
-        response_status = send2server("10.12.54.122", "5002", payload)
-        print(response_status)
-        if response_status == 200:
-            print(f"messages:{client.received_messages}")
-            if client.received_messages == 1 and sampler.lambda_val == config.lambda_value:
+        status,message = send2server("10.12.54.122", "5002", payload)
+        if status == 200:
+            print(f"Server response: message={message}")
+            if message == 1 and sampler.lambda_val == config.lambda_value:
                 print("调整采样率")
                 sampler.lambda_val = 0
-                client.received_messages = 0
                 is_adjust = True
             else:
                 is_adjust = False
+            # if client.received_messages == 1 and sampler.lambda_val == config.lambda_value:
+            #     print("调整采样率")
+            #     sampler.lambda_val = 0
+            #     client.received_messages = 0
+            #     is_adjust = True
+            # else:
+            #     is_adjust = False
         else:
-            print(f"请求失败，状态码: {response_status}")
+            print(f"请求失败，状态码: {status}")
             break
         print(f"采样率{sampler.lambda_val}")
         count += 1

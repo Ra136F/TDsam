@@ -112,7 +112,21 @@ def send2server(host,port,send_json,endpoint="/"):
         conn.request("POST", endpoint, body=body, headers=headers)
         response = conn.getresponse()
         status = response.status
-        return status
+        message = None
+        response_body = None
+        # 1. 尝试解析JSON响应中的消息
+        try:
+            response_body = response.read().decode('utf-8')
+            response_json = json.loads(response_body)
+            message = response_json.get('message')
+        except:
+            # 2. 如果JSON解析失败，直接返回响应体作为消息
+            message = response_body if message is None else response_body
+
+        # 3. 如果没有消息内容，默认使用HTTP状态描述
+        if message is None:
+            message = response.reason
+        return status,message
         # print(f"状态码: {response.status}")
         # print(f"响应内容: {response.read().decode()}")
     except Exception as e:
