@@ -99,7 +99,7 @@ def getMinMax(data,target):
 
 
 def send2server(host,port,send_json,endpoint="/"):
-
+    conn=None
     try:
         payload = send_json
         body = json.dumps(payload).encode('utf-8')
@@ -111,12 +111,15 @@ def send2server(host,port,send_json,endpoint="/"):
         conn = http.client.HTTPConnection(host, port, timeout=600)
         conn.request("POST", endpoint, body=body, headers=headers)
         response = conn.getresponse()
+        status = response.status
+        return status
         # print(f"状态码: {response.status}")
         # print(f"响应内容: {response.read().decode()}")
     except Exception as e:
         print(f"请求失败: {e}")
     finally:
-        conn.close()
+        if conn :
+            conn.close()
 
 
 def merge_power_data(input_dir, output_file):

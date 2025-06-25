@@ -59,15 +59,20 @@ def xender_send(config):
                 "min": json.dumps(min.tolist()),
                 "max": json.dumps(max.tolist())
             }
-        send2server("10.12.54.122", "5002", payload)
-        print(f"messages:{client.received_messages}")
-        if client.received_messages == 1 and sampler.lambda_val==config.lambda_value:
-            print("调整采样率")
-            sampler.lambda_val =0
-            client.received_messages = 0
-            is_adjust = True
+        response_status = send2server("10.12.54.122", "5002", payload)
+        print(response_status)
+        if response_status == 200:
+            print(f"messages:{client.received_messages}")
+            if client.received_messages == 1 and sampler.lambda_val == config.lambda_value:
+                print("调整采样率")
+                sampler.lambda_val = 0
+                client.received_messages = 0
+                is_adjust = True
+            else:
+                is_adjust = False
         else:
-            is_adjust = False
+            print(f"请求失败，状态码: {response_status}")
+            break
         print(f"采样率{sampler.lambda_val}")
         count += 1
 
@@ -110,6 +115,7 @@ def fenlei_send(config):
                 "min": json.dumps(min.tolist()),
                 "max": json.dumps(max.tolist())
             }
-        send2server("10.12.54.122", "5002", payload)
-        print(f"采样率{sampler.lambda_val}")
+        response_status =send2server("10.12.54.122", "5002", payload)
+        if response_status==200:
+            print(f"采样率{sampler.lambda_val}")
         count += 1

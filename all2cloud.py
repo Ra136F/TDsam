@@ -26,6 +26,7 @@ def all_send(config):
             },
             "data": batch_data.to_dict(orient='records'),
         }
-        send2server("10.12.54.122", "5002", payload)
-        print(f"messages:{client.received_messages}")
+        response_status =send2server("10.12.54.122", "5002", payload)
+        if response_status ==200:
+            print(f"messages:{client.received_messages}")
         count += 1
