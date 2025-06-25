@@ -8,11 +8,11 @@ class XenderMQTTClient:
         
     def publish_command(self, command: str):
         """rate"""
-        self.client.publish("xender/control", command,qos=1)
+        self.client.publish("xender/control", command,qos=2)
 
     def subscribe(self, topic: str):
         """...."""
-        self.client.subscribe(topic,qos=1)
+        self.client.subscribe(topic,qos=2)
         self.client.on_message = self.on_message
 
     def on_message(self, client, userdata, msg):
