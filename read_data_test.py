@@ -8,9 +8,9 @@ from util import data_loading, MinMaxScaler, calculate_gap
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
-    parser.add_argument('-data_name', type=str, default='oil-well', help="数据集名称")
-    parser.add_argument('-target', type=str, default='T-JUS-CKP', help="目标特征")
-    parser.add_argument('-lambda_value', type=int, default=0.025, help="采样率")
+    parser.add_argument('-data_name', type=str, default='soil', help="数据集名称")
+    parser.add_argument('-target', type=str, default='soil_moisture', help="目标特征")
+    parser.add_argument('-lambda_value', type=int, default=0.01, help="采样率")
     parser.add_argument('-mode', type=int, default=0, help="[0,1],不适用GPU、使用GPU")
     parser.add_argument('-url', type=str, default='http://10.12.54.122:5002/', help="服务器地址")
     args = parser.parse_args()

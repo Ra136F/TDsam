@@ -118,3 +118,77 @@ def send2server(host,port,send_json,endpoint="/"):
     finally:
         conn.close()
 
+
+def merge_power_data(input_dir, output_file):
+    """
+    将Tracebase数据集目录中的所有文件合并到单个CSV文件
+
+    参数:
+        input_dir: 包含Tracebase数据文件的目录路径
+        output_file: 输出的CSV文件路径
+    """
+    all_data = []
+
+    # 遍历输入目录中的所有文件
+    for filename in os.listdir(input_dir):
+        filepath = os.path.join(input_dir, filename)
+
+        # 只处理CSV文件
+        if not os.path.isfile(filepath) or not filename.endswith('.csv'):
+            continue
+
+        try:
+            # 读取CSV文件，使用分号分隔符，跳过空格
+            df = pd.read_csv(
+                filepath,
+                sep=';',
+                header=None,
+                names=['timestamp_str', 'power_1s', 'power_8s'],
+                skipinitialspace=True,  # 忽略值前的空格
+                on_bad_lines='skip'  # 跳过格式错误的行
+            )
+
+            # 添加处理后的数据到列表
+            all_data.append(df)
+            print(f"已处理: {filename} ({len(df)} 条记录)")
+
+        except Exception as e:
+            print(f"处理文件 {filename} 时出错: {str(e)}")
+
+    if not all_data:
+        print("目录中没有找到有效的CSV文件")
+        return
+
+    # 合并所有数据
+    combined = pd.concat(all_data, ignore_index=True)
+
+    # 转换时间戳格式
+    combined['timestamp'] = pd.to_datetime(
+        combined['timestamp_str'],
+        format='%d/%m/%Y %H:%M:%S',
+        errors='coerce'
+    )
+
+    # 删除原始时间戳字符串列
+    combined.drop(columns=['timestamp_str'], inplace=True)
+
+    # 删除无效的时间戳
+    original_count = len(combined)
+    combined = combined.dropna(subset=['timestamp'])
+    if len(combined) < original_count:
+        removed_count = original_count - len(combined)
+        print(f"移除了 {removed_count} 条无效时间戳记录")
+
+    # 按时间戳排序
+    combined.sort_values(by='timestamp', inplace=True)
+
+    # 重置索引
+    combined.reset_index(drop=True, inplace=True)
+    combined.to_csv(output_file, index=False, columns=['timestamp', 'power_1s', 'power_8s'])
+    print(f"成功保存 {len(combined)} 条记录到 {output_file}")
+    D = combined['power_1s'].values
+    min, max = calculate_gap(D)
+    return combined,min,max
+    # # 保存到CSV
+
+
