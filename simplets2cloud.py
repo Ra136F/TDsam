@@ -32,7 +32,7 @@ def sim_send(config):
         result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
         # result_data = batch_data[:160]
         if config.data_name=="oil-well":
-            result_data = batch_data[:int(len(batch_data)*0.6)]
+            result_data = batch_data[:int(len(batch_data)*0.5)]
         print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
         payload = {
             "metadata": {
