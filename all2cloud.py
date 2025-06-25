@@ -15,16 +15,16 @@ def all_send(config):
     client.client.loop_start()
     for i in range(0, total_rows, batch_rows):
         batch_data = data[i:i + batch_rows]
-        result_iloc = sampler.find_key_points(batch_data[config.target].values)
-        result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
-        print(f"第{count + 1}次传输,原始长度{len(result_data)}")
+        # result_iloc = sampler.find_key_points(batch_data[config.target].values)
+        # result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
+        print(f"第{count + 1}次传输,原始长度{len(batch_data)}")
         payload = {
             "metadata": {
-                "length": len(result_data),
+                "length": len(batch_data),
                 "data_name": config.data_name,
                 "target": config.target,
             },
-            "data": result_data.to_dict(orient='records'),
+            "data": batch_data.to_dict(orient='records'),
         }
         send2server("10.12.54.122", "5002", payload)
         print(f"messages:{client.received_messages}")
