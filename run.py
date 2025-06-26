@@ -8,7 +8,7 @@ from xender2cloud import xender_send, fenlei_send
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
-    parser.add_argument('-method', type=str, default='x', help="传输方式")
+    parser.add_argument('-method', type=str, default='j', help="传输方式")
     parser.add_argument('-data_name', type=str, default='energy', help="数据集名称")
     parser.add_argument('-target', type=str, default='T1', help="目标特征")
     parser.add_argument('-lambda_value', type=float, default=0.025, help="采样率")

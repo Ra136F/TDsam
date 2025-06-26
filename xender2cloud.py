@@ -120,7 +120,7 @@ def fenlei_send(config):
                 "min": json.dumps(min.tolist()),
                 "max": json.dumps(max.tolist())
             }
-        response_status =send2server("10.12.54.122", "5002", payload)
-        if response_status==200:
+        status,message =send2server("10.12.54.122", "5002", payload)
+        if status==200:
             print(f"采样率{sampler.lambda_val}")
         count += 1
