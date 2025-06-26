@@ -64,7 +64,7 @@ def xender_send(config):
             print(f"Server response: message={message}")
             if message == 1 and sampler.lambda_val == config.lambda_value:
                 print("调整采样率")
-                sampler.lambda_val = 0
+                sampler.lambda_val = 0.05
                 is_adjust = True
             else:
                 is_adjust = False
