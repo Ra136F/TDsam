@@ -17,7 +17,7 @@ def xender_send(config):
     data, r_min, r_max = data_loading(folder_path, config.target)
     min,max=getMinMax(data,config.target)
     print(f'max{r_max},min:{r_min}')
-    sampler = TDSampler(initial_lambda=config.lambda_value)
+    sampler = TDSampler(initial_lambda=config.lambda_value,gpu=config.mode)
     total_rows = len(data)
     batch_rows = int(config.ratio * total_rows)
     count = 0
@@ -88,7 +88,7 @@ def fenlei_send(config):
     data, r_min, r_max = data_loading(folder_path, config.target)
     min,max=getMinMax(data,config.target)
     print(f'max{r_max},min:{r_min}')
-    sampler = TDSampler(initial_lambda=config.lambda_value)
+    sampler = TDSampler(initial_lambda=config.lambda_value,gpu=config.mode)
     total_rows = len(data)
     batch_rows = int(config.ratio * total_rows)
     count = 0
