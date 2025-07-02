@@ -1,0 +1,2 @@
+energy T1 0.05 0.025
+oil-well-1 T-JUS-CKP 0.005 0.01
