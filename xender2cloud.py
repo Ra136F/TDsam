@@ -19,18 +19,25 @@ def xender_send(config):
     print(f'max{r_max},min:{r_min}')
     sampler = TDSampler(initial_lambda=config.lambda_value,gpu=config.mode)
     total_rows = len(data)
-    batch_rows = int(config.ratio * total_rows)
+    batch_rows = config.group
+    if config.group == 0:
+        batch_rows = int(config.ratio * total_rows)
     count = 0
     client = XenderMQTTClient(broker="10.12.54.122")
     # client.subscribe("xender/control")
     # client.client.loop_start()
     is_adjust = False
+    total_batches = total_rows // batch_rows
+    if total_rows % batch_rows != 0:
+        total_batches += 1
+    print(f"总批次:{total_batches}")
     for i in range(0, total_rows, batch_rows):
         batch_data = data[i:i + batch_rows]
         result_iloc = sampler.find_key_points(batch_data[config.target].values)
         result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
         print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
-        if  count%2==0 and  2 < count < 60 and sampler.lambda_val == config.lambda_value:
+        is_last = (i + batch_rows >= total_rows)
+        if   20 < count  and sampler.lambda_val == config.lambda_value:
             ori_data = batch_data
             # ori_data = pd.DataFrame()
         else:
@@ -41,7 +48,9 @@ def xender_send(config):
                     "length": len(batch_data),
                     "is_adjust": is_adjust,
                     "data_name": config.data_name,
-                    "target": config.target
+                    "target": config.target,
+                    "is_last": is_last
+
                 },
                 "data": result_data.to_dict(orient='records'),
                 "ori": ori_data.to_dict(orient='records')
@@ -52,7 +61,8 @@ def xender_send(config):
                     "length": len(batch_data),
                     "is_adjust": is_adjust,
                     "data_name": config.data_name,
-                    "target": config.target
+                    "target": config.target,
+                    "is_last": is_last
                 },
                 "data": result_data.to_dict(orient='records'),
                 "ori": ori_data.to_dict(orient='records'),
@@ -64,7 +74,7 @@ def xender_send(config):
             print(f"Server response: message={message}")
             if message == 1 and sampler.lambda_val == config.lambda_value:
                 print("调整采样率")
-                sampler.lambda_val = 0.05
+                sampler.lambda_val =4
                 is_adjust = True
             else:
                 is_adjust = False
@@ -90,21 +100,29 @@ def fenlei_send(config):
     print(f'max{r_max},min:{r_min}')
     sampler = TDSampler(initial_lambda=config.lambda_value,gpu=config.mode)
     total_rows = len(data)
-    batch_rows = int(config.ratio * total_rows)
+    batch_rows = config.group
+    if config.group ==0:
+        batch_rows = int(config.ratio * total_rows)
     count = 0
     is_adjust = False
+    total_batches = total_rows // batch_rows
+    if total_rows % batch_rows != 0:
+        total_batches += 1
+    print(f"总批次:{total_batches}")
     for i in range(0, total_rows, batch_rows):
         batch_data = data[i:i + batch_rows]
         result_iloc = sampler.find_key_points(batch_data[config.target].values)
         result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
         print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
+        is_last = (i + batch_rows >= total_rows)
         if count != 0:
             payload = {
                 "metadata": {
                     "length": len(batch_data),
                     "is_adjust": is_adjust,
                     "data_name": config.data_name,
-                    "target": config.target
+                    "target": config.target,
+                    "is_last": is_last  # 添加结束标记
                 },
                 "data": result_data.to_dict(orient='records')
             }
@@ -114,7 +132,8 @@ def fenlei_send(config):
                     "length": len(batch_data),
                     "is_adjust": is_adjust,
                     "data_name": config.data_name,
-                    "target": config.target
+                    "target": config.target,
+                    "is_last": is_last  # 添加结束标记
                 },
                 "data": result_data.to_dict(orient='records'),
                 "min": json.dumps(min.tolist()),
