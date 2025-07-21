@@ -1,2 +1,3 @@
-energy T1 0.05 0.025
+energy T1 0.05 0.025  20 200
 oil-well-1 T-JUS-CKP 0.005 0.01
+gas sensor_1 0.001 9.6 3.2
