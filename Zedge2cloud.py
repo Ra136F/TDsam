@@ -522,9 +522,11 @@ def HTTP_Func(localfile):
         if response.status_code == 200:
             print("文件 {} 上传成功。".format(localfile))
             # 获取当前时间
-            current_time = datetime.now()
-            formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-            print("当前时间2:", formatted_time)
+
+            end_time = time.time()
+            duration = end_time - start_time
+            print(f"传输完成,共花费:{duration:.4f} s")
+
         else:
             print("文件 {} 上传失败。HTTP状态码: {}".format(localfile, response.status_code))
 
@@ -586,7 +588,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     start_time = time.time()
     main()
-    end_time = time.time()
-    duration = end_time - start_time
-    print(f"传输完成,共花费:{duration:.4f} s")
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
