@@ -143,13 +143,15 @@ def group_put(folder, compressOption):
     global valid_file_count
     global transfer_count
 
-    files_to_send = os.listdir(folder)
-    files_to_send = sorted(files_to_send)
-    for f in files_to_send:
-        filepath = folder+'/'+f
-        if os.path.isfile(filepath):
-            compress_queue.put(filepath)
-            valid_file_count += 1
+    # files_to_send = os.listdir(folder)
+    # files_to_send = sorted(files_to_send)
+    # for f in files_to_send:
+    #     filepath = folder+'/'+f
+    #     if os.path.isfile(filepath):
+    #         compress_queue.put(filepath)
+    #         valid_file_count += 1
+    compress_queue.put(folder)
+    valid_file_count += 1
 
     for i in range(compress_threads):
         ct = threading.Thread( target = group_compress, args = (compressOption,) )
@@ -563,7 +565,8 @@ def main2():
 # Shortest transfer time tests
 def main():
     print("main")
-    group_put("./data", args.compressOption)
+    data_path="./data/"+args.data_name+".csv"
+    group_put(data_path, args.compressOption)
 
 
 
@@ -572,8 +575,8 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
-    parser.add_argument('-data_name', type=str, default='household', help="数据集名称")
-    parser.add_argument('-target', type=str, default='Voltage', help="目标特征")
+    parser.add_argument('-data_name', type=str, default='energy', help="数据集名称")
+    parser.add_argument('-target', type=str, default='T1', help="目标特征")
     parser.add_argument('-ip', type=str, default='10.12.54.122', help="IP地址")
     parser.add_argument('-port', type=str, default='5001', help="端口")
     parser.add_argument('-ratio', type=float, default=0.002, help="比例")
