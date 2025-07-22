@@ -122,7 +122,7 @@ def group_compress(compressOption):
             # sampleid = getsample(item)
             sampleid = item
             print("-------------------------")
-            selectedCompressOption = policy_engine(sampleid, suppoted_compressors, 'WLAN', 1)
+            selectedCompressOption = policy_engine(sampleid, suppoted_compressors, args.network, 1)
             print("-------------------------")
             print('Best compressor for {} based on sample {}: {}'.format(item, sampleid, selectedCompressOption))
         elif compressOption == 'random':
@@ -579,6 +579,7 @@ if __name__ == '__main__':
     parser.add_argument('-ratio', type=float, default=0.002, help="比例")
     parser.add_argument('-group', type=int, default=0, help='分组')
     parser.add_argument('-compressOption', type=str, default='adaptive', help="压缩策略")
+    parser.add_argument('-network', type=str, default='wlan0', help='网卡名称')
     args = parser.parse_args()
     main()
 
