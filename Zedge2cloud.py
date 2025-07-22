@@ -25,7 +25,7 @@ import requests
 
 from datetime import datetime
 
-
+from util import data_loading
 
 # (upload, download)
 SYSTEM_BANDWIDTH = (float(0.5), float(0.5))
@@ -143,15 +143,15 @@ def group_put(folder, compressOption):
     global valid_file_count
     global transfer_count
 
-    # files_to_send = os.listdir(folder)
-    # files_to_send = sorted(files_to_send)
-    # for f in files_to_send:
-    #     filepath = folder+'/'+f
-    #     if os.path.isfile(filepath):
-    #         compress_queue.put(filepath)
-    #         valid_file_count += 1
-    compress_queue.put(folder)
-    valid_file_count += 1
+    files_to_send = os.listdir(folder)
+    files_to_send = sorted(files_to_send)
+    for f in files_to_send:
+        filepath = folder+'/'+f
+        if os.path.isfile(filepath):
+            compress_queue.put(filepath)
+            valid_file_count += 1
+    # compress_queue.put(folder)
+    # valid_file_count += 1
 
     for i in range(compress_threads):
         ct = threading.Thread( target = group_compress, args = (compressOption,) )
@@ -567,7 +567,19 @@ def main2():
 # Shortest transfer time tests
 def main():
     print("main")
-    data_path="./data/"+args.data_name+".csv"
+    data_path="./data/"+args.data_name+"/"
+    # data, r_min, r_max = data_loading(data_path, args.target)
+    # total_rows = len(data)
+    # batch_rows = args.group
+    # total_batches = total_rows // batch_rows
+    # if total_rows % batch_rows != 0:
+    #     total_batches += 1
+    # print(f"总批次:{total_batches}")
+    # for i in range(0, total_rows, batch_rows):
+    #     batch_data = data[i:i + batch_rows]
+
+
+
     group_put(data_path, args.compressOption)
 
 
@@ -582,7 +594,7 @@ if __name__ == '__main__':
     parser.add_argument('-ip', type=str, default='10.12.54.122', help="IP地址")
     parser.add_argument('-port', type=str, default='5001', help="端口")
     parser.add_argument('-ratio', type=float, default=0.002, help="比例")
-    parser.add_argument('-group', type=int, default=0, help='分组')
+    parser.add_argument('-group', type=int, default=300, help='分组')
     parser.add_argument('-compressOption', type=str, default='adaptive', help="压缩策略")
     parser.add_argument('-network', type=str, default='wlan0', help='网卡名称')
     parser.add_argument("-upload_bandwidth", type=float, default=0.1, help="上传带宽")
