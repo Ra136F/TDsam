@@ -12,7 +12,7 @@ if __name__ == '__main__':
     parser.add_argument('-method', type=str, default='a', help="传输方式")
     parser.add_argument('-data_name', type=str, default='power-1', help="数据集名称")
     parser.add_argument('-target', type=str, default='power_1s', help="目标特征")
-    parser.add_argument('-lambda_value', type=float, default=0.025, help="采样率")
+    parser.add_argument('-lambda_value', type=float, default=10, help="采样率")
     parser.add_argument('-mode', type=int, default=0, help="[0,1],不适用GPU、使用GPU")
     parser.add_argument('-ip', type=str, default='10.12.54.122', help="IP地址")
     parser.add_argument('-port', type=str, default='5002', help="端口")
