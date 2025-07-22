@@ -1,7 +1,4 @@
-/0.zip
-/0/
-/Data for A Realistic and Public Dataset with Rare Undesirable Real Events in Oil Wells/
-/Data for A Realistic and Public Dataset with Rare Undesirable Real Events in Oil Wells.zip
+
 /test.py
 /TimeSeriesForecasting-master
 /test
@@ -9,4 +6,5 @@
 /data
 data.rar
 __pycache__
-/data/data/
+/data/
+/data.zip

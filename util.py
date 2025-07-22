@@ -89,6 +89,12 @@ def MinMaxScaler(data):
     norm_data = numerator / (denominator + 1e-7)
     return norm_data, np.min(data, 0), np.max(data, 0)
 
+def MinMaxScaler2(data,min,max):
+    numerator = data - min
+    denominator = max - min
+    norm_data = numerator / (denominator + 1e-7)
+    return norm_data, min, max
+
 def getMinMax(data,target):
     data=data.drop(columns=['date', 'timestamp'], errors='ignore')
     cols = list(data.columns)

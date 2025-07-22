@@ -6,7 +6,7 @@ import time
 import joblib
 import numpy as np
 import pandas as pd
-from twisted.words.protocols.jabber.jstrports import client
+
 
 from mqt import XenderMQTTClient
 from sampler import TDSampler

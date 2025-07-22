@@ -1,2 +1,5 @@
-energy T1 0.05 0.025
-oil-well-1 T-JUS-CKP 0.005 0.01
+energy T1 0.05 0.025  0 20 200
+oil-well-1 T-JUS-CKP 0.005 0.01 0 100 200
+gas sensor_1 0.001 9.6 3.2
+househhold Voltage 0.002    1  0.1      10 200
+gas R1 (MOhm) 0.002 0.1
