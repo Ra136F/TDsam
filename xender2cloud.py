@@ -38,9 +38,9 @@ def xender_send(config):
         result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
         print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
         is_last = (i + batch_rows >= total_rows)
-        if   10 < count  and sampler.lambda_val == config.lambda_value:
-            # ori_data = batch_data
-            ori_data = pd.DataFrame()
+        if   250 < count  and sampler.lambda_val == config.lambda_value:
+            ori_data = batch_data
+            # ori_data = pd.DataFrame()
         else:
             ori_data = pd.DataFrame()
         if count != 0:
@@ -75,7 +75,7 @@ def xender_send(config):
             print(f"Server response: message={message}")
             if message == 1 and sampler.lambda_val == config.lambda_value:
                 print("调整采样率")
-                sampler.lambda_val =0
+                sampler.lambda_val =0.001
                 is_adjust = True
             else:
                 is_adjust = False
@@ -157,7 +157,7 @@ def fenlei_send2(config):
     sampler = TDSampler(initial_lambda=config.lambda_value,gpu=config.mode)
     count = 0
     is_adjust = False
-    detector = AdaptiveCUSUM(k=50, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=100)
+    detector = AdaptiveCUSUM(k=10, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=200)
     detected_change_points = []
     last_cp = 0
     is_last=False
