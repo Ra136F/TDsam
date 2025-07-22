@@ -564,7 +564,7 @@ def main2():
 def main():
     print("main")
     group_put("./data", args.compressOption)
-            
+
 
 
 
@@ -581,5 +581,9 @@ if __name__ == '__main__':
     parser.add_argument('-compressOption', type=str, default='adaptive', help="压缩策略")
     parser.add_argument('-network', type=str, default='wlan0', help='网卡名称')
     args = parser.parse_args()
+    start_time = time.time()
     main()
-
+    end_time = time.time()
+    duration = end_time - start_time
+    print(f"传输完成,共花费:{duration:.4f} s")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
