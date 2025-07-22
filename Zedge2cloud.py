@@ -28,7 +28,7 @@ from datetime import datetime
 
 
 # (upload, download)
-SYSTEM_BANDWIDTH = (float(10), float(10))
+SYSTEM_BANDWIDTH = (float(0.5), float(0.5))
 
 metadata_db = 'metadata.json'
 suppoted_compressors = ('gzip', 'bzip2', 'lzma', 'zstd')
@@ -358,8 +358,8 @@ def idle_net_bandwidth(nic):
     used_upload_rate = (new_bytes_sent - old_bytes_sent) / period / 1024. / 1024.
     used_download_rate = (new_bytes_recv - old_bytes_recv) / period / 1024. / 1024.
     # for 4 transfer threads, one thread can have 1/4 bandwidth
-    avail_upload_rate = max(0.1, SYSTEM_BANDWIDTH[0] - used_upload_rate)
-    avail_download_rate = max(0.1, SYSTEM_BANDWIDTH[1] - used_download_rate)
+    avail_upload_rate = max(0.1, args.upload_bandwidth - used_upload_rate)
+    avail_download_rate = max(0.1,args.download_bandwidth - used_download_rate)
     print('upload_rate, {}, MB/s, download_rate, {}, MB/s'.format(avail_upload_rate, avail_download_rate))
 
     return (avail_upload_rate, avail_download_rate)
@@ -522,9 +522,11 @@ def HTTP_Func(localfile):
         if response.status_code == 200:
             print("文件 {} 上传成功。".format(localfile))
             # 获取当前时间
-            current_time = datetime.now()
-            formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-            print("当前时间2:", formatted_time)
+
+            end_time = time.time()
+            duration = end_time - start_time
+            print(f"传输完成,共花费:{duration:.4f} s")
+
         else:
             print("文件 {} 上传失败。HTTP状态码: {}".format(localfile, response.status_code))
 
@@ -583,10 +585,9 @@ if __name__ == '__main__':
     parser.add_argument('-group', type=int, default=0, help='分组')
     parser.add_argument('-compressOption', type=str, default='adaptive', help="压缩策略")
     parser.add_argument('-network', type=str, default='wlan0', help='网卡名称')
+    parser.add_argument("-upload_bandwidth", type=float, default=0.1, help="上传带宽")
+    parser.add_argument("-download_bandwidth", type=float, default=0.1, help="下载带宽")
     args = parser.parse_args()
     start_time = time.time()
     main()
-    end_time = time.time()
-    duration = end_time - start_time
-    print(f"传输完成,共花费:{duration:.4f} s")
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
