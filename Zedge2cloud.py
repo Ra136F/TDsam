@@ -95,6 +95,22 @@ def group_transfer():
         HTTP_Func(item)
         transfer_queue.task_done()
         transfer_count += 1
+def group_transfer2(c_file):
+    global valid_file_count
+    global transfer_count
+
+
+
+
+    item = c_file
+
+    print('Sending {}'.format(item))
+    # SCP_Func(item)
+    HTTP_Func(item)
+    transfer_queue.task_done()
+    transfer_count += 1
+
+
 
 
 def group_compress(compressOption):
@@ -137,6 +153,25 @@ def group_compress(compressOption):
         transfer_queue.put(c_file)
         compress_queue.task_done()
 
+def group_compress2(file_path,compressOption):
+    item = file_path
+    selectedCompressOption = None
+    if compressOption == 'adaptive':
+        # sampleid = getsample(item)
+        sampleid = item
+        print("-------------------------")
+        selectedCompressOption = policy_engine(sampleid, suppoted_compressors, args.network, 1)
+        print("-------------------------")
+        print('Best compressor for {} based on sample {}: {}'.format(item, sampleid, selectedCompressOption))
+    elif compressOption == 'random':
+        selectedCompressOption = random.choice(suppoted_compressors)
+        print('Random compressor for {}: {}'.format(item, selectedCompressOption))
+
+    if selectedCompressOption:
+        c_file = E2C_Compress(item, selectedCompressOption)
+    else:
+        c_file = E2C_Compress(item, compressOption)
+    return c_file
 
 # folder must be a folder name
 def group_put(folder, compressOption):
@@ -577,10 +612,20 @@ def main():
     # print(f"总批次:{total_batches}")
     # for i in range(0, total_rows, batch_rows):
     #     batch_data = data[i:i + batch_rows]
+    global valid_file_count
+    global transfer_count
+
+    files_to_send = os.listdir(data_path)
+    files_to_send = sorted(files_to_send)
+    for f in files_to_send:
+        filepath = data_path+'/'+f
+        if os.path.isfile(filepath):
+            # compress_queue.put(filepath)
+            c_file=group_compress2(filepath,args.compressOption)
+            group_transfer2(c_file)
 
 
-
-    group_put(data_path, args.compressOption)
+    # group_put(data_path, args.compressOption)
 
 
 
