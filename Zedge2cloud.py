@@ -603,15 +603,6 @@ def main2():
 def main():
     print("main")
     data_path="./data/"+args.data_name+"/"
-    # data, r_min, r_max = data_loading(data_path, args.target)
-    # total_rows = len(data)
-    # batch_rows = args.group
-    # total_batches = total_rows // batch_rows
-    # if total_rows % batch_rows != 0:
-    #     total_batches += 1
-    # print(f"总批次:{total_batches}")
-    # for i in range(0, total_rows, batch_rows):
-    #     batch_data = data[i:i + batch_rows]
     global valid_file_count
     global transfer_count
 
