@@ -27,7 +27,9 @@ if __name__ == '__main__':
         xender_send(args)
     elif args.method == 'all' or args.method == 'a':
         all_send(args)
-    elif args.method == 'j' or args.method == 'julei':
+    elif args.method == 'guding' or args.method == 'g':
+        fenlei_send(args)
+    elif args.method == 'c' or args.method == 'cusum':
         fenlei_send2(args)
     else:
         local_fenlei_cusum(args)
