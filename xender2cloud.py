@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 
 import asyncio
-import aiohttp
 from concurrent.futures import ThreadPoolExecutor
 from cusum import AdaptiveCUSUM
 from mqt import XenderMQTTClient
