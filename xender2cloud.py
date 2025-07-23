@@ -38,7 +38,7 @@ def xender_send(config):
         result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
         print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
         is_last = (i + batch_rows >= total_rows)
-        if   250 < count  and sampler.lambda_val == config.lambda_value:
+        if   20 < count  and sampler.lambda_val == config.lambda_value:
             ori_data = batch_data
             # ori_data = pd.DataFrame()
         else:
@@ -75,7 +75,7 @@ def xender_send(config):
             print(f"Server response: message={message}")
             if message == 1 and sampler.lambda_val == config.lambda_value:
                 print("调整采样率")
-                sampler.lambda_val =0.001
+                sampler.lambda_val =0
                 is_adjust = True
             else:
                 is_adjust = False
