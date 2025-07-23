@@ -107,7 +107,6 @@ def group_transfer2(c_file):
     print('Sending {}'.format(item))
     # SCP_Func(item)
     HTTP_Func(item)
-    transfer_queue.task_done()
     transfer_count += 1
 
 
