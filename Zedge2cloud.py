@@ -551,7 +551,8 @@ def HTTP_Func(localfile):
     # 打开文件并作为multipart/form-data请求发送
     with open(localfile, 'rb') as f:
         files = {'file': f}
-        response = requests.post('http://10.12.54.122:5001/upload', files=files)
+        url="http://"+args.ip+":"+args.port+"/upload"
+        response = requests.post(url, files=files)
         
         if response.status_code == 200:
             print("文件 {} 上传成功。".format(localfile))
@@ -627,7 +628,7 @@ if __name__ == '__main__':
     parser.add_argument('-data_name', type=str, default='energy', help="数据集名称")
     parser.add_argument('-target', type=str, default='T1', help="目标特征")
     parser.add_argument('-ip', type=str, default='10.12.54.122', help="IP地址")
-    parser.add_argument('-port', type=str, default='5001', help="端口")
+    parser.add_argument('-port', type=str, default='5002', help="端口")
     parser.add_argument('-ratio', type=float, default=0.002, help="比例")
     parser.add_argument('-group', type=int, default=300, help='分组')
     parser.add_argument('-compressOption', type=str, default='adaptive', help="压缩策略")
