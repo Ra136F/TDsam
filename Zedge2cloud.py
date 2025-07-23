@@ -98,12 +98,7 @@ def group_transfer():
 def group_transfer2(c_file):
     global valid_file_count
     global transfer_count
-
-
-
-
     item = c_file
-
     print('Sending {}'.format(item))
     # SCP_Func(item)
     HTTP_Func(item)
@@ -609,7 +604,7 @@ def main():
     files_to_send = os.listdir(data_path)
     files_to_send = sorted(files_to_send)
     for f in files_to_send:
-        filepath = data_path+'/'+f
+        filepath = data_path+f
         if os.path.isfile(filepath):
             # compress_queue.put(filepath)
             c_file=group_compress2(filepath,args.compressOption)
