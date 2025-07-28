@@ -227,5 +227,5 @@ def fenlei_send2(config):
             print(f"采样率{sampler.lambda_val}")
         print("传输完成")
         count+=1
-    print(f"检测到的突变点位置: {detected_change_points}")
+    # print(f"检测到的突变点位置: {detected_change_points}")
 
