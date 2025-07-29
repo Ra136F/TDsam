@@ -11,6 +11,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from cusum import AdaptiveCUSUM
 from mqt import XenderMQTTClient
+from numbacusum import NumbaCUSUM
 from sampler import TDSampler
 from util import data_loading, getMinMax, send2server
 
@@ -348,16 +349,13 @@ def fenlei_send3(config):
     sampler = TDSampler(initial_lambda=config.lambda_value,gpu=config.mode)
     count = 0
     is_adjust = False
-    detector = AdaptiveCUSUM(k=20, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=200)
-    detected_change_points = []
     last_cp = 0
     is_last=False
     start_time = time.time()
-    for i, (_, row) in enumerate(data.iterrows()):
-        value = row[config.target]
-        change_detected, position = detector.update(value)
-        if change_detected:
-            detected_change_points.append(i)
+    detector = NumbaCUSUM(k=20, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=200)
+    changes = detector.batch_update(data[config.target].values)
+    detected_change_points = [i for i, changed in enumerate(changes) if changed]
+    print(len(detected_change_points))
     end_time = time.time()
     print(f"找点花费{end_time - start_time}s")
     for i in detected_change_points:
@@ -376,7 +374,7 @@ def fenlei_send3(config):
             "data": result_data.to_dict(orient='records')
         }
         # 第一批数据添加min/max
-        if len(detected_change_points) == 1:
+        if count == 0:
             payload["min"] = json.dumps(min.tolist())
             payload["max"] = json.dumps(max.tolist())
         status, message = send2server("10.12.54.122", "5002", payload)

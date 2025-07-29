@@ -28,9 +28,9 @@ if __name__ == '__main__':
     elif args.method == 'all' or args.method == 'a':
         all_send(args)
     elif args.method == 'guding' or args.method == 'g':
-        fenlei_send3(args)
+        fenlei_send(args)
     elif args.method == 'c' or args.method == 'cusum':
-        fenlei_send2_yibu(args)
+        fenlei_send3(args)
     else:
         local_fenlei_cusum(args)
     end_time = time.time()
