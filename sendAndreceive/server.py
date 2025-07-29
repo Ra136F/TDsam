@@ -3,7 +3,7 @@ import os
 
 app = Flask(__name__)
 
-# ÉèÖÃ±£´æÎÄ¼şµÄÂ·¾¶
+# è®¾ç½®ä¿å­˜æ–‡ä»¶çš„è·¯å¾„
 UPLOAD_FOLDER = './uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -12,18 +12,18 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
-        return "Ã»ÓĞÎÄ¼ş²¿·Ö", 400
+        return "æ²¡æœ‰æ–‡ä»¶éƒ¨åˆ†", 400
 
     file = request.files['file']
 
     if file.filename == '':
-        return "Ã»ÓĞÑ¡ÔñÎÄ¼ş", 400
+        return "æ²¡æœ‰é€‰æ‹©æ–‡ä»¶", 400
 
-    # ±£´æÎÄ¼ş
+    # ä¿å­˜æ–‡ä»¶
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     file.save(file_path)
 
-    return f"ÎÄ¼ş³É¹¦ÉÏ´«µ½ {file_path}", 200
+    return f"æ–‡ä»¶æˆåŠŸä¸Šä¼ åˆ° {file_path}", 200
 
 
 if __name__ == '__main__':

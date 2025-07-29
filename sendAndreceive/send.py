@@ -7,13 +7,13 @@ def send_csv_to_server(csv_file_path, server_url):
             response = requests.post(server_url, files=files)
 
             if response.status_code == 200:
-                print("ÎÄ¼şÉÏ´«³É¹¦")
+                print("æ–‡ä»¶ä¸Šä¼ æˆåŠŸ")
             else:
-                print(f"ÎÄ¼şÉÏ´«Ê§°Ü£¬×´Ì¬Âë: {response.status_code}")
+                print(f"æ–‡ä»¶ä¸Šä¼ å¤±è´¥ï¼ŒçŠ¶æ€ç : {response.status_code}")
     except Exception as e:
-        print(f"ÉÏ´«¹ı³ÌÖĞ·¢Éú´íÎó: {e}")
+        print(f"ä¸Šä¼ è¿‡ç¨‹ä¸­å‘ç”Ÿé”™è¯¯: {e}")
 
-# Ê¾Àı£º½«ÎÄ¼ş·¢ËÍµ½·şÎñ¶Ë
-csv_file_path = '../data/household.csv'  # ĞèÒªÉÏ´«µÄ CSV ÎÄ¼şÂ·¾¶
-server_url = 'http://192.168.31.59:5000/upload'  # ·şÎñÆ÷µØÖ·
+# ç¤ºä¾‹ï¼šå°†æ–‡ä»¶å‘é€åˆ°æœåŠ¡ç«¯
+csv_file_path = '../data/household.csv'  # éœ€è¦ä¸Šä¼ çš„ CSV æ–‡ä»¶è·¯å¾„
+server_url = 'http://192.168.31.59:5000/upload'  # æœåŠ¡å™¨åœ°å€
 send_csv_to_server(csv_file_path, server_url)
