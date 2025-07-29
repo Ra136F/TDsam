@@ -5,7 +5,7 @@ import time
 from SamplerTest import test, local_fenlei_cusum, local_fenlei_guding
 from all2cloud import all_send
 from simplets2cloud import sim_send
-from xender2cloud import xender_send, fenlei_send, fenlei_send2
+from xender2cloud import xender_send, fenlei_send, fenlei_send2, fenlei_send2_yibu
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
