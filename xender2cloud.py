@@ -163,7 +163,7 @@ def fenlei_send2(config):
     sampler = TDSampler(initial_lambda=config.lambda_value,gpu=config.mode)
     count = 0
     is_adjust = False
-    detector = AdaptiveCUSUM(k=100, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=300)
+    detector = AdaptiveCUSUM(k=20, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=200)
     detected_change_points = []
     last_cp = 0
     is_last=False
