@@ -5,7 +5,7 @@ import time
 from SamplerTest import test, local_fenlei_cusum, local_fenlei_guding
 from all2cloud import all_send
 from simplets2cloud import sim_send
-from xender2cloud import xender_send, fenlei_send, fenlei_send2, fenlei_send2_yibu
+from xender2cloud import xender_send, fenlei_send, fenlei_send2, fenlei_send2_yibu, fenlei_send3
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
@@ -28,9 +28,9 @@ if __name__ == '__main__':
     elif args.method == 'all' or args.method == 'a':
         all_send(args)
     elif args.method == 'guding' or args.method == 'g':
-        fenlei_send(args)
+        fenlei_send3(args)
     elif args.method == 'c' or args.method == 'cusum':
-        fenlei_send2(args)
+        fenlei_send3(args)
     else:
         test(args)
     end_time = time.time()

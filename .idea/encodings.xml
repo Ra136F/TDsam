@@ -10,6 +10,8 @@
     <file url="file://$PROJECT_DIR$/process_house.py" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/process_house2.py" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/process_oil.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/sendAndreceive/send.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/sendAndreceive/server.py" charset="UTF-8" />
     <file url="PROJECT" charset="GBK" />
   </component>
 </project>
