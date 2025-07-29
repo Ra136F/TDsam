@@ -6,6 +6,7 @@
     <file url="file://$PROJECT_DIR$/batch_data_save.py" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/cuTest.py" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/cusum.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/numbacusum.py" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/process_gas.py" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/process_house.py" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/process_house2.py" charset="UTF-8" />
