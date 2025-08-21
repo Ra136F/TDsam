@@ -163,14 +163,17 @@ def local_fenlei_guding(config):
     if total_rows % batch_rows != 0:
         total_batches += 1
     print(f"总批次:{total_batches}")
-    kmmodel = load(f'./model/{config.data_name}-km-300.pkl')['model']
+    kmmodel = load(f'./model/{config.data_name}-km-o.pkl')['model']
     for i in range(0, total_rows, batch_rows):
         batch_data = data[i:i + batch_rows]
         fenlei_data = batch_data[config.target].values
         fenlei_data, _, _ = MinMaxScaler(fenlei_data)
         fenlei_data = fenlei_data.reshape(1, len(fenlei_data), 1)
-        labels = kmmodel.predict(fenlei_data)
-        model_id = labels[0]
+        if len(batch_data) < config.group:
+            model_id = 0
+        else:
+            labels = kmmodel.predict(fenlei_data)
+            model_id = labels[0]
         print(f"选择模型:{model_id}")
         result_iloc = sampler.find_key_points(batch_data[config.target].values)
         result_data = batch_data.iloc[result_iloc].reset_index(drop=True)

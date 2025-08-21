@@ -100,6 +100,7 @@ def getMinMax(data,target):
     cols = list(data.columns)
     cols.remove(target)
     data = data[cols+[target]]
+    data=data[:int(0.1 * len(data))]
     data, min, max = MinMaxScaler(np.array(data[target]))
     return min, max
 
