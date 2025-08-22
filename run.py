@@ -5,34 +5,42 @@ import time
 from SamplerTest import test, local_fenlei_cusum, local_fenlei_guding
 from all2cloud import all_send
 from simplets2cloud import sim_send
-from xender2cloud import xender_send, fenlei_send, fenlei_send2, fenlei_send2_yibu, fenlei_send3
+from util import init_args
+from xender2cloud import xender_send, fenlei_send, fenlei_send2, fenlei_send3, fenlei_send4
+
+
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
-    parser.add_argument('-method', type=str, default='g', help="传输方式")
+    parser.add_argument('-method', type=str, default='c', help="传输方式(全传输(all、a) xender(x) 固定窗口(guding、g) cusum(c))")
     parser.add_argument('-data_name', type=str, default='household', help="数据集名称")
-    parser.add_argument('-target', type=str, default='Voltage', help="目标特征")
-    parser.add_argument('-lambda_value', type=float, default=1, help="采样率")
-    parser.add_argument('-mode', type=int, default=1, help="[0,1],不适用GPU、使用GPU")
+    parser.add_argument('-target', type=str, default='T1', help="目标特征")
+    parser.add_argument('-lambda_value', type=float, default=0.25, help="采样率")
+    parser.add_argument('-mode', type=int, default=0, help="[0,1],不适用GPU、使用GPU")
     parser.add_argument('-ip', type=str, default='10.12.54.122', help="IP地址")
     parser.add_argument('-port', type=str, default='5002', help="端口")
     parser.add_argument('-ratio', type=float, default=0.002, help="比例")
     parser.add_argument('-group', type=int, default=300, help='分组')
+    parser.add_argument('-sampler', type=str, default='xender', help="采样器(random or xender)")
     args = parser.parse_args()
 
     start_time = time.time()
-    if args.method == 'simplets' or args.method == 's':
+
+    args=init_args(args)
+    if args.method == 'simplets' or args.method == 's':#无作用
         sim_send(args)
-    elif args.method == 'xender' or args.method == 'x':
+    elif args.method == 'xender' or args.method == 'x':#xender
         xender_send(args)
-    elif args.method == 'all' or args.method == 'a':
+    elif args.method == 'all' or args.method == 'a':#全传输
         all_send(args)
-    elif args.method == 'guding' or args.method == 'g':
+    elif args.method == 'guding' or args.method == 'g':#guding
         fenlei_send(args)
-    elif args.method == 'c' or args.method == 'cusum':
-        fenlei_send3(args)
-    else:
-        test(args)
+    elif args.method == 'c' or args.method == 'cusum':#cusum
+        fenlei_send4(args)
+    else:#测试
+        local_fenlei_guding(args)#
     end_time = time.time()
     duration = end_time - start_time
     print(f"传输完成,共花费:{duration: .4f} s")

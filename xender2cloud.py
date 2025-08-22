@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from cusum import AdaptiveCUSUM
 from mqt import XenderMQTTClient
 from numbacusum import NumbaCUSUM
-from sampler import TDSampler
+from sampler import TDSampler, RandomSampler
 from util import data_loading, getMinMax, send2server
 
 
@@ -41,9 +41,9 @@ def xender_send(config):
         result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
         print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
         is_last = (i + batch_rows >= total_rows)
-        if   5000 < count  and sampler.lambda_val == config.lambda_value:
-            ori_data = batch_data
-            # ori_data = pd.DataFrame()
+        if   300 < count  and sampler.lambda_val == config.lambda_value:
+            # ori_data = batch_data
+            ori_data = pd.DataFrame()
         else:
             ori_data = pd.DataFrame()
         if count != 0:
@@ -78,7 +78,7 @@ def xender_send(config):
             print(f"Server response: message={message}")
             if message == 1 and sampler.lambda_val == config.lambda_value:
                 print("调整采样率")
-                sampler.lambda_val =0.005
+                sampler.lambda_val =0.002
                 is_adjust = True
             else:
                 is_adjust = False
@@ -154,7 +154,7 @@ def fenlei_send(config):
 
 
 
-#在线检测
+#在线检测cusum
 def fenlei_send2(config):
     folder_path = './data' + '/' + config.data_name
     data, r_min, r_max = data_loading(folder_path, config.target)
@@ -176,8 +176,12 @@ def fenlei_send2(config):
             # 发送上一个变点到当前变点之间的数据
             if last_cp < i:  # 确保有数据可发送
                 batch_data=data[last_cp:i]
-                result_iloc = sampler.find_key_points(batch_data[config.target].values)
-                result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
+                if sampler.lambda_val == -1:
+                    result_data=[]
+                    sampler.lambda_val =config.lambda_value
+                else:
+                    result_iloc = sampler.find_key_points(batch_data[config.target].values)
+                    result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
                 print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
                 # if count != 0:
                 #     payload = {
@@ -245,99 +249,7 @@ def fenlei_send2(config):
         count+=1
     #print(f"检测到的突变点位置: {detected_change_points}")
 
-def fenlei_send2_yibu(config):
-    folder_path = './data' + '/' + config.data_name
-    data, r_min, r_max = data_loading(folder_path, config.target)
-    min,max=getMinMax(data,config.target)
-    print(min)
-    print(f'max{r_max},min:{r_min}')
-    sampler = TDSampler(initial_lambda=config.lambda_value,gpu=config.mode)
-    count = 0
-    is_adjust = False
-    detector = AdaptiveCUSUM(k=20, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=200)
-    detected_change_points = []
-    last_cp = 0
-    is_last=False
-    send_queue = queue.Queue()
-    results = []  # 存储发送结果
-    worker = threading.Thread(target=send_worker, args=(send_queue, results))
-    worker.start()
-    for i, (_, row) in enumerate(data.iterrows()):
-        value = row[config.target]
-        change_detected, position = detector.update(value)
-        if change_detected:
-            detected_change_points.append(i)
-            if last_cp < i:  # 确保有数据可发送
-                batch_data=data[last_cp:i]
-                result_iloc = sampler.find_key_points(batch_data[config.target].values)
-                result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
-                print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
-                payload = {
-                    "metadata": {
-                        "length": len(batch_data),
-                        "is_adjust": False,
-                        "data_name": config.data_name,
-                        "target": config.target,
-                        "is_last": is_last
-                    },
-                    "data": result_data.to_dict(orient='records')
-                }
-                # 第一批数据添加min/max
-                if len(detected_change_points) == 1:
-                    payload["min"] = json.dumps(min.tolist())
-                    payload["max"] = json.dumps(max.tolist())
-                count+=1
-                send_queue.put(("10.12.54.122", "5002", payload))
-                print(f"已提交批次 {len(detected_change_points)}")
-            last_cp = i
-    if last_cp < len(data):
-        is_last=True
-        batch_data = data[last_cp:]
-        result_iloc = sampler.find_key_points(batch_data[config.target].values)
-        result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
-        print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
-        payload = {
-            "metadata": {
-                "length": len(batch_data),
-                "is_adjust": is_adjust,
-                "data_name": config.data_name,
-                "target": config.target,
-                "is_last": is_last  # 添加结束标记
-            },
-            "data": result_data.to_dict(orient='records')
-        }
-        count+=1
-        status, message = async_send2server("10.12.54.122", "5002", payload)
-        if status == 200:
-            print(f"最后批次发送成功，采样率{sampler.lambda_val}")
-            print("传输完成")
-        else:
-            print(f"最后批次发送失败: {message}")
-    send_queue.join()  # 阻塞直到所有任务完成
-    send_queue.put(None)  # 通知工作线程退出
-    worker.join()
-    print(f"所有批次提交完成，共发送{len(detected_change_points) + 1}个批次")
 
-
-
-# 异步发送函数
-def async_send2server(ip, port, payload):
-    # 这里是你的原始发送函数实现
-    return send2server(ip, port, payload)
-
-# 发送任务处理线程
-def send_worker(q, results):
-    while True:
-        task = q.get()
-        if task is None:  # 终止信号
-            break
-        ip, port, payload = task
-        status, message = async_send2server(ip, port, payload)
-        results.append((status, message))  # 存储结果供检查
-        if status == 200:
-            # 如果需要，可以在这里处理成功的响应
-            pass
-        q.task_done()
 
 
 #先找点再发送
@@ -353,7 +265,7 @@ def fenlei_send3(config):
     last_cp = 0
     is_last=False
     start_time = time.time()
-    detector = NumbaCUSUM(k=100, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=200)
+    detector = NumbaCUSUM(k=10, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=200)
     changes = detector.batch_update(data[config.target].values)
     detected_change_points = [i for i, changed in enumerate(changes) if changed]
     print(len(detected_change_points))
@@ -383,6 +295,91 @@ def fenlei_send3(config):
             print(f"采样率{sampler.lambda_val}")
         count += 1
         last_cp = i
+    if last_cp < len(data):
+        is_last=True
+        batch_data = data[last_cp:]
+        result_iloc = sampler.find_key_points(batch_data[config.target].values)
+        result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
+        print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
+        payload = {
+            "metadata": {
+                "length": len(batch_data),
+                "is_adjust": is_adjust,
+                "data_name": config.data_name,
+                "target": config.target,
+                "is_last": is_last  # 添加结束标记
+            },
+            "data": result_data.to_dict(orient='records')
+        }
+        status, message = send2server("10.12.54.122", "5002", payload)
+        if status==200:
+            print(f"采样率{sampler.lambda_val}")
+        print("传输完成")
+        count+=1
+
+#动态增加类别
+def fenlei_send4(config):
+    folder_path = './data' + '/' + config.data_name
+    data, r_min, r_max = data_loading(folder_path, config.target)
+    min,max=getMinMax(data,config.target)
+    print(min)
+    print(f'max{r_max},min:{r_min}')
+    sampler = TDSampler(initial_lambda=config.lambda_value, gpu=config.mode)
+    if config.sampler=='random':
+        sampler=RandomSampler(sample_ratio=0.1)
+
+    count = 0
+    is_adjust = False
+    detector = AdaptiveCUSUM(k=10, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=200)
+    detected_change_points = []
+    last_cp = 0
+    last_lambda = 0
+    is_last=False
+    for i, (_, row) in enumerate(data.iterrows()):
+        value = row[config.target]
+        change_detected, position = detector.update(value)
+        if change_detected:
+            detected_change_points.append(i)
+            # 发送上一个变点到当前变点之间的数据
+            if last_cp < i:  # 确保有数据可发送
+                batch_data=data[last_cp:i]
+                if is_adjust:
+                    result_data=batch_data.copy()
+                    # result_iloc = sampler.find_key_points(batch_data[config.target].values)
+                    # result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
+                    sampler.lambda_val =last_lambda
+                else:
+                    result_iloc = sampler.find_key_points(batch_data[config.target].values)
+                    result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
+                print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
+                payload = {
+                    "metadata": {
+                        "length": len(batch_data),
+                        "is_adjust": is_adjust,
+                        "data_name": config.data_name,
+                        "target": config.target,
+                        "is_last": is_last  # 添加结束标记
+                    },
+                    "data": result_data.to_dict(orient='records')
+                }
+                # 第一批数据添加min/max
+                if len(detected_change_points) == 1:
+                    payload["min"] = json.dumps(min.tolist())
+                    payload["max"] = json.dumps(max.tolist())
+                status, message = send2server("10.12.54.122", "5002", payload)
+                if message==1:
+                    last_lambda = sampler.lambda_val
+                    sampler.lambda_val = -1
+                    is_adjust=True
+                else:
+                    is_adjust=False
+                if status==200:
+                    if config.sampler=='random':
+                        print(f"随机采样10%数据")
+                    else:
+                        print(f"采样率{sampler.lambda_val}")
+                count+=1
+            last_cp = i
     if last_cp < len(data):
         is_last=True
         batch_data = data[last_cp:]
