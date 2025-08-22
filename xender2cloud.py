@@ -41,7 +41,7 @@ def xender_send(config):
         result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
         print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
         is_last = (i + batch_rows >= total_rows)
-        if   10000 < count  and sampler.lambda_val == config.lambda_value:
+        if   5000 < count  and sampler.lambda_val == config.lambda_value:
             ori_data = batch_data
             # ori_data = pd.DataFrame()
         else:
@@ -78,7 +78,7 @@ def xender_send(config):
             print(f"Server response: message={message}")
             if message == 1 and sampler.lambda_val == config.lambda_value:
                 print("调整采样率")
-                sampler.lambda_val =0
+                sampler.lambda_val =0.005
                 is_adjust = True
             else:
                 is_adjust = False
@@ -353,7 +353,7 @@ def fenlei_send3(config):
     last_cp = 0
     is_last=False
     start_time = time.time()
-    detector = NumbaCUSUM(k=20, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=200)
+    detector = NumbaCUSUM(k=100, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=200)
     changes = detector.batch_update(data[config.target].values)
     detected_change_points = [i for i, changed in enumerate(changes) if changed]
     print(len(detected_change_points))
