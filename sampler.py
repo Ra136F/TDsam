@@ -66,3 +66,47 @@ class TDSampler:  # 客户端采样算法代码
             key_flags[i] = is_peak or is_valley or is_high_curvature
 
         return key_flags
+
+
+
+class RandomSampler:
+    def __init__(self, sample_ratio: float = 0.1, gpu=0):
+        """
+        随机采样器构造函数
+        :param sample_ratio: 采样比例 (0.0 ~ 1.0)
+        :param gpu: 预留参数，保持接口一致性
+        """
+        assert 0 <= sample_ratio <= 1, "sample_ratio must be in [0.0, 1.0]"
+        self.sample_ratio = sample_ratio
+        self.gpu = gpu  # 保持接口兼容
+        self.lambda_val = 0
+
+    def find_key_points(self, data: np.ndarray) -> List[int]:
+        """
+        执行随机采样，返回关键点索引
+        :param data: 输入数据数组
+        :return: 排序后的关键点索引列表
+        """
+        n = len(data)
+        # 处理边界情况
+        if n == 0:
+            return []
+        if n == 1:
+            return [0]
+        # 始终包含首尾点
+        key_indices = [0, n - 1]
+        # 当数据点不足3个时直接返回
+        if n <= 2:
+            return key_indices
+        # 计算需要采样的中间点数量（不包括首尾点）
+        num_mid_points = n - 2
+        sample_size = max(0, min(int(round(self.sample_ratio * num_mid_points)), num_mid_points))
+        # 如果采样点数为0，只返回首尾点
+        if sample_size == 0:
+            return key_indices
+        # 随机选择中间点索引
+        mid_indices = list(range(1, n - 1))
+        sampled_mid_indices = np.random.choice(mid_indices, size=sample_size, replace=False).tolist()
+
+        key_indices.extend(sampled_mid_indices)
+        return sorted(key_indices)

@@ -216,3 +216,18 @@ def merge_power_data(input_dir, output_file):
     # # 保存到CSV
 
 
+
+def init_args(config):
+
+    if config.data_name == 'energy':
+        config.target = 'T1'
+    elif config.data_name == 'oil-well-1':
+        config.target = 'T-JUS-CKP'
+    elif config.data_name == 'household':
+        config.lambda_value = 1
+        config.target = 'Voltage'
+    elif config.data_name == 'ocean':
+        config.target = 'TEMP_2'
+    elif config.data_name == 'PPG':
+        config.target = 'S1_heart_rate_bpm'
+    return config

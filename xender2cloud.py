@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from cusum import AdaptiveCUSUM
 from mqt import XenderMQTTClient
 from numbacusum import NumbaCUSUM
-from sampler import TDSampler
+from sampler import TDSampler, RandomSampler
 from util import data_loading, getMinMax, send2server
 
 
@@ -323,10 +323,13 @@ def fenlei_send4(config):
     min,max=getMinMax(data,config.target)
     print(min)
     print(f'max{r_max},min:{r_min}')
-    sampler = TDSampler(initial_lambda=config.lambda_value,gpu=config.mode)
+    sampler = TDSampler(initial_lambda=config.lambda_value, gpu=config.mode)
+    if config.sampler=='random':
+        sampler=RandomSampler(sample_ratio=0.1)
+
     count = 0
     is_adjust = False
-    detector = AdaptiveCUSUM(k=20, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=200)
+    detector = AdaptiveCUSUM(k=10, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=200)
     detected_change_points = []
     last_cp = 0
     last_lambda = 0
@@ -370,7 +373,10 @@ def fenlei_send4(config):
                 else:
                     is_adjust=False
                 if status==200:
-                    print(f"采样率{sampler.lambda_val}")
+                    if config.sampler=='random':
+                        print(f"随机采样10%数据")
+                    else:
+                        print(f"采样率{sampler.lambda_val}")
                 count+=1
             last_cp = i
     if last_cp < len(data):
