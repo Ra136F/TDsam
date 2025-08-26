@@ -221,13 +221,26 @@ def init_args(config):
 
     if config.data_name == 'energy':
         config.target = 'T1'
+        config.lambda_value = 0.25
     elif config.data_name == 'oil-well-1':
         config.target = 'T-JUS-CKP'
+        config.lambda_value = 0.1
     elif config.data_name == 'household':
         config.lambda_value = 1
         config.target = 'Voltage'
+        if config.method == "c":
+            config.k = 10
+            config.segment_length = 200
     elif config.data_name == 'ocean':
         config.target = 'TEMP_2'
-    elif config.data_name == 'PPG':
+        config.lambda_value = 0.01
+        if config.method == "c":
+            config.k = 10
+            config.segment_length = 200
+    elif config.data_name == 'ppg':
         config.target = 'S1_heart_rate_bpm'
+        config.lambda_value = 0.5
+        if config.method == "c":
+            config.k = 30
+            config.segment_length = 200
     return config
