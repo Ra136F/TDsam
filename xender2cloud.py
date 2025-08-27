@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from cusum import AdaptiveCUSUM
 from mqt import XenderMQTTClient
 from numbacusum import NumbaCUSUM
-from sampler import TDSampler, RandomSampler
+from sampler import TDSampler, RandomSampler, RandomSampler2
 from util import data_loading, getMinMax, send2server
 
 
@@ -123,30 +123,20 @@ def fenlei_send(config):
         result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
         print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
         is_last = (i + batch_rows >= total_rows)
-        if count != 0:
-            payload = {
-                "metadata": {
-                    "length": len(batch_data),
-                    "is_adjust": is_adjust,
-                    "data_name": config.data_name,
-                    "target": config.target,
-                    "is_last": is_last  # 添加结束标记
-                },
-                "data": result_data.to_dict(orient='records')
-            }
-        else:
-            payload = {
-                "metadata": {
-                    "length": len(batch_data),
-                    "is_adjust": is_adjust,
-                    "data_name": config.data_name,
-                    "target": config.target,
-                    "is_last": is_last  # 添加结束标记
-                },
-                "data": result_data.to_dict(orient='records'),
-                "min": json.dumps(min.tolist()),
-                "max": json.dumps(max.tolist())
-            }
+        payload = {
+            "metadata": {
+                "length": len(batch_data),
+                "is_adjust": is_adjust,
+                "data_name": config.data_name,
+                "target": config.target,
+                "is_last": is_last  # 添加结束标记
+            },
+            "data": result_data.to_dict(orient='records')
+        }
+        # 第一批数据添加min/max
+        if count == 0:
+            payload["min"] = json.dumps(min.tolist())
+            payload["max"] = json.dumps(max.tolist())
         status,message =send2server("10.12.54.122", "5002", payload)
         if status==200:
             print(f"采样率{sampler.lambda_val}")
@@ -326,11 +316,11 @@ def fenlei_send4(config):
     print(f'max{r_max},min:{r_min}')
     sampler = TDSampler(initial_lambda=config.lambda_value, gpu=config.mode)
     if config.sampler=='random':
-        sampler=RandomSampler(sample_ratio=0.1)
+        sampler=RandomSampler2(sample_prob=0.3)
 
     count = 0
     is_adjust = False
-    detector = AdaptiveCUSUM(k=10, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=200)
+    detector = AdaptiveCUSUM(k=config.k, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=config.segment_length)
     detected_change_points = []
     last_cp = 0
     last_lambda = 0

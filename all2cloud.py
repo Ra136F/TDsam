@@ -17,7 +17,7 @@ def all_send(config):
     # client = XenderMQTTClient(broker=config.ip)
     # client.subscribe("xender/control")
     # client.client.loop_start()
-    print(f"zong pici{total_batches}")
+    print(f"总批次:{total_batches}")
     for i in range(0, total_rows, batch_rows):
         batch_data = data[i:i + batch_rows]
         print(f"第{count + 1}次传输,原始长度{len(batch_data)}")

@@ -110,3 +110,40 @@ class RandomSampler:
 
         key_indices.extend(sampled_mid_indices)
         return sorted(key_indices)
+
+
+
+class RandomSampler2:
+    def __init__(self, sample_prob: float = 0.3, gpu=0):
+        """
+        随机采样器构造函数
+        :param sample_prob: 每个点被采样的概率 (0.0 ~ 1.0)
+        :param gpu: 预留参数，保持接口一致性
+        """
+        assert 0 <= sample_prob <= 1, "sample_prob must be in [0.0, 1.0]"
+        self.sample_prob = sample_prob
+        self.gpu = gpu  # 保持接口兼容
+        self.lambda_val = 0
+
+    def find_key_points(self, data: np.ndarray) -> List[int]:
+        """
+        执行随机采样，返回关键点索引
+        :param data: 输入数据数组
+        :return: 排序后的关键点索引列表
+        """
+        n = len(data)
+        # 处理边界情况
+        if n == 0:
+            return []
+        if n == 1:
+            return [0]
+        # 始终包含首尾点
+        key_indices = [0, n - 1]
+        # 当数据点不足3个时直接返回
+        if n <= 2:
+            return key_indices
+        # 遍历中间点，以概率sample_prob决定是否采样
+        for i in range(1, n - 1):
+            if np.random.rand() < self.sample_prob:
+                key_indices.append(i)
+        return sorted(key_indices)
