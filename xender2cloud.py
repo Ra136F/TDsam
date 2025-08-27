@@ -41,9 +41,9 @@ def xender_send(config):
         result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
         print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
         is_last = (i + batch_rows >= total_rows)
-        if   300 < count  and sampler.lambda_val == config.lambda_value:
-            # ori_data = batch_data
-            ori_data = pd.DataFrame()
+        if   5000 < count  and sampler.lambda_val == config.lambda_value:
+            ori_data = batch_data
+            # ori_data = pd.DataFrame()
         else:
             ori_data = pd.DataFrame()
         if count != 0:
@@ -78,7 +78,7 @@ def xender_send(config):
             print(f"Server response: message={message}")
             if message == 1 and sampler.lambda_val == config.lambda_value:
                 print("调整采样率")
-                sampler.lambda_val =0.002
+                sampler.lambda_val =0.5
                 is_adjust = True
             else:
                 is_adjust = False
@@ -117,10 +117,17 @@ def fenlei_send(config):
     if total_rows % batch_rows != 0:
         total_batches += 1
     print(f"总批次:{total_batches}")
+    last_lambda = 0
     for i in range(0, total_rows, batch_rows):
         batch_data = data[i:i + batch_rows]
-        result_iloc = sampler.find_key_points(batch_data[config.target].values)
-        result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
+        if is_adjust:
+            result_data = batch_data.copy()
+            # result_iloc = sampler.find_key_points(batch_data[config.target].values)
+            # result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
+            sampler.lambda_val = last_lambda
+        else:
+            result_iloc = sampler.find_key_points(batch_data[config.target].values)
+            result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
         print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
         is_last = (i + batch_rows >= total_rows)
         payload = {
@@ -138,6 +145,12 @@ def fenlei_send(config):
             payload["min"] = json.dumps(min.tolist())
             payload["max"] = json.dumps(max.tolist())
         status,message =send2server("10.12.54.122", "5002", payload)
+        if message == 1:
+            last_lambda = sampler.lambda_val
+            sampler.lambda_val = -1
+            is_adjust = True
+        else:
+            is_adjust = False
         if status==200:
             print(f"采样率{sampler.lambda_val}")
         count += 1

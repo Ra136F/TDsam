@@ -15,7 +15,7 @@ from xender2cloud import xender_send, fenlei_send, fenlei_send2, fenlei_send3, f
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
     parser.add_argument('-method', type=str, default='g', help="传输方式(全传输(all、a) xender(x) 固定窗口(guding、g) cusum(c))")
-    parser.add_argument('-data_name', type=str, default='ppg', help="数据集名称")
+    parser.add_argument('-data_name', type=str, default='household', help="数据集名称")
     parser.add_argument('-target', type=str, default='T1', help="目标特征")
     parser.add_argument('-lambda_value', type=float, default=0.25, help="采样率")
     parser.add_argument('-mode', type=int, default=0, help="[0,1],不适用GPU、使用GPU")
