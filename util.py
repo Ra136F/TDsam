@@ -225,6 +225,9 @@ def init_args(config):
     elif config.data_name == 'oil-well-1':
         config.target = 'T-JUS-CKP'
         config.lambda_value = 0.1
+        if config.method == "c":
+            config.k = 100
+            config.segment_length = 200
     elif config.data_name == 'household':
         config.lambda_value = 1
         config.target = 'Voltage'
@@ -243,4 +246,23 @@ def init_args(config):
         if config.method == "c":
             config.k = 30
             config.segment_length = 200
+    elif config.data_name == 'City-power':
+        config.target = 'Humidity'
+        config.lambda_value = 1.5
+        if config.method == "c":
+            config.k = 50
+            config.segment_length = 250
+    elif config.data_name == 'twitter':
+        config.target = 'latitude'
+        config.lambda_value =15
+        if config.method == "c":
+            config.k = 5
+            config.segment_length = 200
+    elif config.data_name == 'rain':
+        config.target = 'value'
+        config.lambda_value = 1.6
+        if config.method == "c":
+            config.k = 10
+            config.segment_length = 200
+
     return config
