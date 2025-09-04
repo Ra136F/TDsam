@@ -222,6 +222,7 @@ def init_args(config):
     if config.data_name == 'energy':
         config.target = 'T1'
         config.lambda_value = 0.25
+        config.second_lambda = 0.025
     elif config.data_name == 'oil-well-1':
         config.target = 'T-JUS-CKP'
         config.lambda_value = 0.1
@@ -230,6 +231,7 @@ def init_args(config):
             config.segment_length = 200
     elif config.data_name == 'household':
         config.lambda_value = 1
+        config.second_lambda = 0.5
         config.target = 'Voltage'
         if config.method == "c":
             config.k = 10
@@ -237,12 +239,14 @@ def init_args(config):
     elif config.data_name == 'ocean':
         config.target = 'TEMP_2'
         config.lambda_value = 0.01
+        config.second_lambda = 0.002
         if config.method == "c":
             config.k = 10
             config.segment_length = 200
     elif config.data_name == 'ppg':
         config.target = 'S1_heart_rate_bpm'
         config.lambda_value = 0.5
+        config.second_lambda = 0
         if config.method == "c":
             config.k = 30
             config.segment_length = 200
@@ -261,8 +265,9 @@ def init_args(config):
     elif config.data_name == 'rain':
         config.target = 'value'
         config.lambda_value = 1.6
+        config.second_lambda=0.6
+        config.start_ori_time = 15000
         if config.method == "c":
             config.k = 10
             config.segment_length = 200
-
     return config
