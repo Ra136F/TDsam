@@ -1,4 +1,5 @@
 import argparse
+import os
 from datetime import datetime
 import time
 
@@ -25,7 +26,7 @@ if __name__ == '__main__':
     parser.add_argument('-ip', type=str, default='10.12.54.122', help="IP地址")
     parser.add_argument('-port', type=str, default='5002', help="端口")
     parser.add_argument('-ratio', type=float, default=0.002, help="比例")
-    parser.add_argument('-group', type=int, default=500, help='分组')
+    parser.add_argument('-group', type=int, default=200, help='分组')
     parser.add_argument('-sampler', type=str, default='xender', help="采样器(random or xender)")
     parser.add_argument("-k", type=int, default=10, help="k")
     parser.add_argument("-segment_length", type=int, default=200, help="cusum最小长度")
@@ -52,7 +53,10 @@ if __name__ == '__main__':
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # 格式化日志条目
     log_entry = f"[{timestamp}] 传输方法: {args.method}, 耗时: {duration:.4f} 秒\n"
-    save_path=f"./result/{args.data_name}_{args.method}.txt"
+    file_path = f"./result/{args.data_name}/"
+    if not os.path.exists(file_path):
+        os.makedirs(file_path)
+    save_path=f"./result/{args.data_name}/gpu-{args.mode}-{args.method}-{args.group}.txt"
     with open(save_path, "w") as f:
         f.write(log_entry)
 
