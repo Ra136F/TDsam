@@ -81,7 +81,7 @@ async def xender_send_async(config):
             result_iloc = sampler.find_key_points(batch_data[config.target].values)
             result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
             is_last = (i + batch_rows >= total_rows)
-            if count % 10==0 and sampler.lambda_val == config.lambda_value:
+            if count >=config.start_ori_time and sampler.lambda_val == config.lambda_value:
                 if config.aware == 0:
                     ori_data = pd.DataFrame()
                 else:
