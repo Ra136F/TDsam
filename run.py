@@ -56,7 +56,7 @@ if __name__ == '__main__':
     file_path = f"./result/{args.data_name}/"
     if not os.path.exists(file_path):
         os.makedirs(file_path)
-    save_path=f"./result/{args.data_name}/gpu-{args.mode}-{args.method}-{args.group}.txt"
+    save_path=f"./result/{args.data_name}/gpu-{args.mode}-{args.method}-{args.group}-{timestamp}.txt"
     with open(save_path, "w") as f:
         f.write(log_entry)
 

@@ -4,6 +4,8 @@ import json
 import time
 import threading
 import queue
+
+import httpx
 import numpy as np
 import pandas as pd
 
@@ -14,7 +16,7 @@ from mqt import XenderMQTTClient
 from numbacusum import NumbaCUSUM
 from sampler import TDSampler, RandomSampler, RandomSampler2
 from util import data_loading, getMinMax, send2server, clean_floats, ServerSender
-import httpx
+
 
 async def send_batch(client, payload, sem, batch_idx):
     """异步发送一个批次"""
