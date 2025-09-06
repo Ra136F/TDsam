@@ -1,6 +1,7 @@
 import glob
 import http
 import json
+import math
 import os
 
 import numpy as np
@@ -105,6 +106,44 @@ def getMinMax(data,target):
     return min, max
 
 
+class ServerSender:
+    def __init__(self, host, port, timeout=600):
+        self.conn = http.client.HTTPConnection(host, port, timeout=timeout)
+
+    def send(self, payload, endpoint="/upload"):
+        try:
+            body = json.dumps(payload).encode("utf-8")
+            headers = {
+                "Content-Type": "application/json",
+                "Content-Length": str(len(body))
+            }
+            self.conn.request("POST", endpoint, body, headers)
+            # response = self.conn.getresponse()
+            # response_body = response.read().decode("utf-8")
+            response =  self.conn.getresponse()
+            status = response.status
+            message = None
+            response_body = None
+            # 1. 尝试解析JSON响应中的消息
+            try:
+                response_body = response.read().decode('utf-8')
+                response_json = json.loads(response_body)
+                message = response_json.get('message')
+            except:
+                # 2. 如果JSON解析失败，直接返回响应体作为消息
+                message = response_body if message is None else response_body
+
+            # 3. 如果没有消息内容，默认使用HTTP状态描述
+            if message is None:
+                message = response.reason
+            return status, message
+        except Exception as e:
+            print(f"[Sender] 请求失败: {e}")
+            return 500, str(e)
+
+    def close(self):
+        self.conn.close()
+
 def send2server(host,port,send_json,endpoint="/"):
     conn=None
     try:
@@ -138,6 +177,7 @@ def send2server(host,port,send_json,endpoint="/"):
         # print(f"响应内容: {response.read().decode()}")
     except Exception as e:
         print(f"请求失败: {e}")
+        return 500, str(e)
     finally:
         if conn :
             conn.close()
@@ -266,8 +306,20 @@ def init_args(config):
         config.target = 'value'
         config.lambda_value = 1.6
         config.second_lambda=0.6
-        config.start_ori_time = 15000
+        config.start_ori_time = 19000
         if config.method == "c":
             config.k = 10
             config.segment_length = 200
     return config
+
+def clean_floats(obj):
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None  # 或者 0.0，看你需求
+        return obj
+    elif isinstance(obj, dict):
+        return {k: clean_floats(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [clean_floats(v) for v in obj]
+    else:
+        return obj
