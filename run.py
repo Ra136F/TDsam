@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import os
 from datetime import datetime
 import time
@@ -7,11 +8,8 @@ from SamplerTest import test, local_fenlei_cusum, local_fenlei_guding
 from all2cloud import all_send
 from simplets2cloud import sim_send
 from util import init_args
-from xender2cloud import xender_send, fenlei_send, fenlei_send2, fenlei_send3, fenlei_send4
-
-
-
-
+from xender2cloud import xender_send, fenlei_send, fenlei_send2, fenlei_send3, fenlei_send4, \
+    xender_pipeline_send2, xender_send_async
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
@@ -22,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument("-start_ori_time", type=int, default=0, help="开始传输原始数据的时间")
     parser.add_argument("-second_lambda",type=float,default=0.0,help="降低后的采样率")
     parser.add_argument('-aware',type=int,default=1,help="[0,1],内容不感知、内容感知")
-    parser.add_argument('-mode', type=int, default=1, help="[0,1],不适用GPU、使用GPU")
+    parser.add_argument('-mode', type=int, default=0, help="[0,1],不适用GPU、使用GPU")
     parser.add_argument('-ip', type=str, default='10.12.54.122', help="IP地址")
     parser.add_argument('-port', type=str, default='5002', help="端口")
     parser.add_argument('-ratio', type=float, default=0.002, help="比例")
@@ -38,7 +36,9 @@ if __name__ == '__main__':
     if args.method == 'simplets' or args.method == 's':#无作用
         sim_send(args)
     elif args.method == 'xender' or args.method == 'x':#xender
-        xender_send(args)
+        # xender_send(args)
+        asyncio.run(xender_send_async(args))
+        # xender_pipeline_send2(args)
     elif args.method == 'all' or args.method == 'a':#全传输
         all_send(args)
     elif args.method == 'guding' or args.method == 'g':#guding
