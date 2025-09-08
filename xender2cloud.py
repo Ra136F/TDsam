@@ -18,108 +18,87 @@ from sampler import TDSampler, RandomSampler, RandomSampler2
 from util import data_loading, getMinMax, send2server, clean_floats, ServerSender
 
 
-async def send_batch(client, payload, sem, batch_idx):
-    """异步发送一个批次"""
-    async with sem:  # 控制并发数
-        try:
-            resp = await client.post("http://10.12.54.122:5002/upload", json=payload, timeout=30.0)
-            if resp.status_code == 200:
-                data = resp.json()
-                print(f"[Batch {batch_idx}] ACK: {data}")
-            else:
-                print(f"[Batch {batch_idx}] 失败 status={resp.status_code}")
-        except Exception as e:
-            print(f"[Batch {batch_idx}] 请求异常: {e}")
 
 
-async def xender_send_async(config):
+
+def xender_send_async(config):
     folder_path = './data' + '/' + config.data_name
     data, r_min, r_max = data_loading(folder_path, config.target)
     min_val, max_val = getMinMax(data, config.target)
 
     sampler = TDSampler(initial_lambda=config.lambda_value, gpu=config.mode)
     total_rows = len(data)
-    batch_rows = config.group or int(config.ratio * total_rows)
+    batch_rows = config.group if config.group > 0 else int(config.ratio * total_rows)
     total_batches = (total_rows + batch_rows - 1) // batch_rows
-    print(f"总批次: {total_batches}")
-    mqt = XenderMQTTClient(broker="10.12.54.122")
-    sem = asyncio.Semaphore(2)
-    tasks = []
-    async with httpx.AsyncClient() as client:
-        # -------- 首批数据（必须先发，保证服务端初始化） --------
-        first_batch = data[0:batch_rows]
-        result_iloc = sampler.find_key_points(first_batch[config.target].values)
-        result_data = first_batch.iloc[result_iloc].reset_index(drop=True)
-
-        ori_data = pd.DataFrame()
+    print(f"总批次:{total_batches}")
+    mqtt_client = XenderMQTTClient(broker="10.12.54.122")
+    batch_data = data[:batch_rows]
+    result_iloc = sampler.find_key_points(batch_data[config.target].values)
+    result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
+    ori_data = pd.DataFrame()  # 第一批不传 ori
+    is_last = (batch_rows >= total_rows)
+    is_adjust=False
+    print(is_last)
+    payload = {
+        "metadata": {
+            "batch_id": 0,
+            "length": len(batch_data),
+            "is_adjust": False,
+            "data_name": config.data_name,
+            "target": config.target,
+            "is_last": is_last,
+        },
+        "data": result_data.to_dict(orient='records'),
+        "ori": ori_data.to_dict(orient='records'),
+        "min": json.dumps(min_val.tolist()),
+        "max": json.dumps(max_val.tolist())
+    }
+    print("发送第一批数据（同步）...")
+    status, message = send2server("10.12.54.122", "5002", payload)
+    if status != 200:
+        print(f"请求失败，状态码: {status}")
+        return
+    print("第一批处理完成，服务端已初始化")
+    count = 1
+    for i in range(batch_rows, total_rows, batch_rows):
+        batch_data = data[i:i + batch_rows]
+        result_iloc = sampler.find_key_points(batch_data[config.target].values)
+        result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
+        is_last = (i + batch_rows >= total_rows)
+        ori_data = batch_data if (config.aware == 1 and count >= config.start_ori_time and sampler.lambda_val==config.lambda_value ) else pd.DataFrame()
+        print(f"是否传输原始数据:{len(ori_data)>0}")
         payload = {
             "metadata": {
-                "length": len(first_batch),
-                "is_adjust": False,
+                "batch_id": count,
+                "length": len(batch_data),
+                "is_adjust": is_adjust,
                 "data_name": config.data_name,
                 "target": config.target,
-                "is_last": (batch_rows >= total_rows),
+                "is_last": is_last
             },
-            "data": result_data.to_dict(orient="records"),
-            "ori": first_batch.to_dict(orient="records"),
-            "min": json.dumps(min_val.tolist()),
-            "max": json.dumps(max_val.tolist())
+            "data": result_data.to_dict(orient='records'),
+            "ori": ori_data.to_dict(orient='records')
         }
-
-        # 同步等待首批ACK
-        payload = clean_floats(payload)
-        resp = await client.post("http://10.12.54.122:5002/upload", json=payload, timeout=30.0)
-        if resp.status_code == 200:
-            print("[首批] ACK:", resp.json())
+        status, message = send2server("10.12.54.122", "5002", payload)
+        if status != 200:
+            print(f"请求失败，状态码: {status}")
+            break
+        print(f"第{count + 1}批发送完成，采样率={sampler.lambda_val}")
+        # 检查是否收到采样率调整信号
+        mqtt_client.client.loop(timeout=0)
+        if mqtt_client.received_adjust:
+            print("[Client] 采样率调整信号生效")
+            sampler.lambda_val = config.second_lambda
+            is_adjust = True
+            mqtt_client.received_adjust = False
         else:
-            print("[首批] 失败，停止传输")
-            return
-        count=1
-        is_adjust=False
-        # -------- 从第二批开始允许并发 --------
-        for i in range(batch_rows, total_rows, batch_rows):
-            batch_idx = i // batch_rows + 1
-            batch_data = data[i:i + batch_rows]
-            result_iloc = sampler.find_key_points(batch_data[config.target].values)
-            result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
-            is_last = (i + batch_rows >= total_rows)
-            if count >=config.start_ori_time and sampler.lambda_val == config.lambda_value:
-                if config.aware == 0:
-                    ori_data = pd.DataFrame()
-                else:
-                    ori_data = batch_data
-                #
-            else:
-                ori_data = pd.DataFrame()
-            if mqt.received_adjust and sampler.lambda_val == config.lambda_value:
-                print("调整采样率")
-                is_adjust = True
-                sampler.lambda_val = config.second_lambda
-                mqt.received_adjust = False
-                print(f"[Client] 采样率已调整: {config.lambda_value} → {sampler.lambda_val}")
-            else:
-                is_adjust = False
-            payload = {
-                "metadata": {
-                    "length": len(batch_data),
-                    "is_adjust": is_adjust,
-                    "data_name": config.data_name,
-                    "target": config.target,
-                    "is_last": is_last,
-                },
-                "data": result_data.to_dict(orient="records"),
-                "ori": ori_data.to_dict(orient="records")
-            }
-            payload = clean_floats(payload)
-            if is_adjust:
-                resp = await client.post("http://10.12.54.122:5002/upload", json=payload, timeout=30.0)
-                print(f"[Batch {batch_idx}] (同步更新) ACK:", resp.json())
-            else:
-                task = asyncio.create_task(send_batch(client, payload, sem, batch_idx))
-                tasks.append(task)
-            count+=1
-        # 等所有并发批次完成
-        await asyncio.gather(*tasks)
+            is_adjust = False
+        count += 1
+
+    # === Step 3: 等待完成通知 ===
+    while not mqtt_client.received_done:
+        time.sleep(0.1)
+    print("客户端确认：所有批次处理并保存完成")
 
 def xender_pipeline_send2(config):
     folder_path = './data' + '/' + config.data_name

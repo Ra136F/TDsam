@@ -13,7 +13,7 @@ from xender2cloud import xender_send, fenlei_send, fenlei_send2, fenlei_send3, f
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
-    parser.add_argument('-method', type=str, default='a', help="传输方式(全传输(all、a) xender(x) 固定窗口(guding、g) cusum(c))")
+    parser.add_argument('-method', type=str, default='x', help="传输方式(全传输(all、a) xender(x) 固定窗口(guding、g) cusum(c))")
     parser.add_argument('-data_name', type=str, default='rain', help="数据集名称")
     parser.add_argument('-target', type=str, default='T1', help="目标特征")
     parser.add_argument('-lambda_value', type=float, default=0.25, help="采样率")
@@ -36,9 +36,9 @@ if __name__ == '__main__':
     if args.method == 'simplets' or args.method == 's':#无作用
         sim_send(args)
     elif args.method == 'xender' or args.method == 'x':#xender
-        # xender_send(args)
-        #asyncio.run(xender_send_async(args))
-         xender_pipeline_send2(args)
+        # xender_send(args)=
+        xender_send_async(args)
+        # xender_pipeline_send2(args)
     elif args.method == 'all' or args.method == 'a':#全传输
         all_send(args)
     elif args.method == 'guding' or args.method == 'g':#guding
