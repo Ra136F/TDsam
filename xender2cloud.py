@@ -205,6 +205,7 @@ def xender_send(config):
         batch_rows = int(config.ratio * total_rows)
     count = 0
     client = XenderMQTTClient(broker="10.12.54.122")
+    conn = http.client.HTTPConnection("10.12.54.122", 5002, timeout=600)
     # client.subscribe("xender/control")
     # client.client.loop_start()
     is_adjust = False
@@ -223,7 +224,6 @@ def xender_send(config):
                 ori_data = pd.DataFrame()
             else:
                 ori_data = batch_data
-            #
         else:
             ori_data = pd.DataFrame()
         if count != 0:
@@ -234,7 +234,6 @@ def xender_send(config):
                     "data_name": config.data_name,
                     "target": config.target,
                     "is_last": is_last
-
                 },
                 "data": result_data.to_dict(orient='records'),
                 "ori": ori_data.to_dict(orient='records')
@@ -253,7 +252,7 @@ def xender_send(config):
                 "min": json.dumps(min.tolist()),
                 "max": json.dumps(max.tolist())
             }
-        status,message = send2server("10.12.54.122", "5002", payload)
+        status,message = send2server("10.12.54.122", "5002",conn, payload)
         if status == 200:
             print(f"Server response: message={message}")
             if message == 1 and sampler.lambda_val == config.lambda_value:
@@ -262,23 +261,12 @@ def xender_send(config):
                 is_adjust = True
             else:
                 is_adjust = False
-            # if client.received_messages == 1 and sampler.lambda_val == config.lambda_value:
-            #     print("调整采样率")
-            #     sampler.lambda_val = 0
-            #     client.received_messages = 0
-            #     is_adjust = True
-            # else:
-            #     is_adjust = False
         else:
             print(f"请求失败，状态码: {status}")
             break
         print(f"采样率{sampler.lambda_val}")
         count += 1
-
-
-
-
-
+    conn.close()
 
 #固定分组
 def fenlei_send(config):
