@@ -275,6 +275,7 @@ def fenlei_send(config):
     min,max=getMinMax(data,config.target)
     print(f'max{r_max},min:{r_min}')
     sampler = TDSampler(initial_lambda=config.lambda_value,gpu=config.mode)
+    conn = http.client.HTTPConnection("10.12.54.122", 5002, timeout=600)
     total_rows = len(data)
     batch_rows = config.group
     if config.group ==0:
@@ -312,7 +313,7 @@ def fenlei_send(config):
         if count == 0:
             payload["min"] = json.dumps(min.tolist())
             payload["max"] = json.dumps(max.tolist())
-        status,message =send2server("10.12.54.122", "5002", payload)
+        status,message =send2server("10.12.54.122", "5002",conn, payload)
         if message == 1:
             last_lambda = sampler.lambda_val
             sampler.lambda_val = -1
@@ -495,6 +496,7 @@ def fenlei_send4(config):
     print(min)
     print(f'max{r_max},min:{r_min}')
     sampler = TDSampler(initial_lambda=config.lambda_value, gpu=config.mode)
+    conn = http.client.HTTPConnection("10.12.54.122", 5002, timeout=600)
     if config.sampler=='random':
         sampler=RandomSampler2(sample_prob=0.3)
 
@@ -566,7 +568,7 @@ def fenlei_send4(config):
             },
             "data": result_data.to_dict(orient='records')
         }
-        status, message = send2server("10.12.54.122", "5002", payload)
+        status, message = send2server("10.12.54.122", "5002",conn, payload)
         if status==200:
             print(f"采样率{sampler.lambda_val}")
         print("传输完成")
