@@ -37,7 +37,7 @@ if __name__ == '__main__':
         sim_send(args)
     elif args.method == 'xender' or args.method == 'x':#xender
         # xender_send(args)
-        asyncio.run(xender_send_async(args))
+        xender_send_async(args)
         # xender_pipeline_send2(args)
     elif args.method == 'all' or args.method == 'a':#全传输
         all_send(args)

@@ -305,7 +305,7 @@ def init_args(config):
     elif config.data_name == 'rain':
         config.target = 'value'
         config.lambda_value = 1.6
-        config.second_lambda=0.6
+        config.second_lambda=0.2
         config.start_ori_time = 19000
         if config.method == "c":
             config.k = 10
