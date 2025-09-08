@@ -36,8 +36,8 @@ if __name__ == '__main__':
     if args.method == 'simplets' or args.method == 's':#无作用
         sim_send(args)
     elif args.method == 'xender' or args.method == 'x':#xender
-        # xender_send(args)
-        xender_send_async(args)
+        xender_send(args)
+        # xender_send_async(args)
         # xender_pipeline_send2(args)
     elif args.method == 'all' or args.method == 'a':#全传输
         all_send(args)

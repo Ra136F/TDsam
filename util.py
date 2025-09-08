@@ -144,8 +144,7 @@ class ServerSender:
     def close(self):
         self.conn.close()
 
-def send2server(host,port,send_json,endpoint="/"):
-    conn=None
+def send2server(host,port,conn,send_json,endpoint="/"):
     try:
         payload = send_json
         body = json.dumps(payload).encode('utf-8')
@@ -154,7 +153,7 @@ def send2server(host,port,send_json,endpoint="/"):
             "Content-Type": "application/json",
             "Content-Length": str(len(body))
         }
-        conn = http.client.HTTPConnection(host, port, timeout=600)
+
         conn.request("POST", endpoint, body=body, headers=headers)
         response = conn.getresponse()
         status = response.status
@@ -178,9 +177,7 @@ def send2server(host,port,send_json,endpoint="/"):
     except Exception as e:
         print(f"请求失败: {e}")
         return 500, str(e)
-    finally:
-        if conn :
-            conn.close()
+
 
 
 def merge_power_data(input_dir, output_file):
