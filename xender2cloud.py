@@ -219,7 +219,7 @@ def xender_send(config):
         result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
         print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
         is_last = (i + batch_rows >= total_rows)
-        if  config.start_ori_time < count  and sampler.lambda_val == config.lambda_value:
+        if   count>=config.start_ori_time  and sampler.lambda_val == config.lambda_value:
             if config.aware==0:
                 ori_data = pd.DataFrame()
             else:
@@ -539,7 +539,7 @@ def fenlei_send4(config):
                 if len(detected_change_points) == 1:
                     payload["min"] = json.dumps(min.tolist())
                     payload["max"] = json.dumps(max.tolist())
-                status, message = send2server("10.12.54.122", "5002", payload)
+                status, message = send2server("10.12.54.122", "5002",conn, payload)
                 if message==1:
                     last_lambda = sampler.lambda_val
                     sampler.lambda_val = -1
