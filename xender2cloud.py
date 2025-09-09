@@ -499,7 +499,6 @@ def fenlei_send4(config):
     conn = http.client.HTTPConnection("10.12.54.122", 5002, timeout=600)
     if config.sampler=='random':
         sampler=RandomSampler2(sample_prob=0.3)
-
     count = 0
     is_adjust = False
     detector = AdaptiveCUSUM(k=config.k, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=config.segment_length)
@@ -538,7 +537,7 @@ def fenlei_send4(config):
                 if len(detected_change_points) == 1:
                     payload["min"] = json.dumps(min.tolist())
                     payload["max"] = json.dumps(max.tolist())
-                status, message = send2server("10.12.54.122", "5002", payload)
+                status, message = send2server("10.12.54.122", "5002",conn, payload)
                 if message==1:
                     last_lambda = sampler.lambda_val
                     sampler.lambda_val = -1
