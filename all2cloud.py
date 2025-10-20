@@ -1,13 +1,14 @@
 from mqt import XenderMQTTClient
 from sampler import TDSampler
 from util import data_loading, send2server
-
+import http
 
 def all_send(config):
     folder_path = './data' + '/' + config.data_name
     data, r_min, r_max = data_loading(folder_path, config.target)
     total_rows = len(data)
     batch_rows = config.group
+    conn=http.client.HTTPConnection("10.12.54.122",5002,timeout=3000)
     if config.group == 0:
         batch_rows = int(config.ratio * total_rows)
     count = 0
@@ -31,7 +32,7 @@ def all_send(config):
             },
             "data": batch_data.to_dict(orient='records'),
         }
-        status,message =send2server("10.12.54.122", "5002", payload)
+        status,message =send2server("10.12.54.122", "5002",conn, payload)
         if status == 200:
             print(f"第{count + 1}次传输完成")
         count += 1
