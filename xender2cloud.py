@@ -500,7 +500,6 @@ def fenlei_send4(config):
     conn = http.client.HTTPConnection("10.12.54.122", 5002, timeout=600)
     if config.sampler=='random':
         sampler=RandomSampler2(sample_prob=0.3)
-
     count = 0
     is_adjust = False
     detector = AdaptiveCUSUM(k=config.k, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=config.segment_length)

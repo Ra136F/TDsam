@@ -1,3 +1,5 @@
+import http
+
 from mqt import XenderMQTTClient
 from sampler import TDSampler
 from util import data_loading, send2server
@@ -13,6 +15,7 @@ def all_send(config):
         batch_rows = int(config.ratio * total_rows)
     count = 0
     total_batches = total_rows // batch_rows
+    conn = http.client.HTTPConnection("10.12.54.122", 5002, timeout=600)
     if total_rows % batch_rows != 0:
         total_batches += 1
     # client = XenderMQTTClient(broker=config.ip)
