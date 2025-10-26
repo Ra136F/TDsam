@@ -2,8 +2,11 @@
 /test.py
 /TimeSeriesForecasting-master
 /test
+/result
+/data
+data.rar
+__pycache__
 /data/
-/data/data/
 /data.zip
 /off_train_fenlei.py
 /result.zip

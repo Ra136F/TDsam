@@ -20,7 +20,7 @@ def upload_file():
         return "没有选择文件", 400
 
     # 保存文件
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    file_path = file.filename
     file.save(file_path)
 
     return f"文件成功上传到 {file_path}", 200
