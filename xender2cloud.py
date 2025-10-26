@@ -11,14 +11,14 @@ import pandas as pd
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+
+from joblib import load
+
 from cusum import AdaptiveCUSUM
 from mqt import XenderMQTTClient
 from numbacusum import NumbaCUSUM
 from sampler import TDSampler, RandomSampler, RandomSampler2
-from util import data_loading, getMinMax, send2server, clean_floats, ServerSender
-
-
-
+from util import data_loading, getMinMax, send2server, clean_floats, ServerSender, MinMaxScaler2
 
 
 def xender_send_async(config):
@@ -563,6 +563,104 @@ def fenlei_send4(config):
                 "is_adjust": is_adjust,
                 "data_name": config.data_name,
                 "target": config.target,
+                "is_last": is_last  # 添加结束标记
+            },
+            "data": result_data.to_dict(orient='records')
+        }
+        status, message = send2server("10.12.54.122", "5002",conn, payload)
+        if status==200:
+            print(f"采样率{sampler.lambda_val}")
+        print("传输完成")
+        count+=1
+
+def fenlei_send_loacl(config):
+    folder_path = './data' + '/' + config.data_name
+    data, r_min, r_max = data_loading(folder_path, config.target)
+    min,max=getMinMax(data,config.target)
+    print(min)
+    print(f'max{r_max},min:{r_min}')
+    sampler = TDSampler(initial_lambda=config.lambda_value, gpu=config.mode)
+    conn = http.client.HTTPConnection("10.12.54.122", 5002, timeout=600)
+    if config.sampler=='random':
+        sampler=RandomSampler2(sample_prob=0.3)
+    count = 0
+    is_adjust = False
+    detector = AdaptiveCUSUM(k=config.k, drift_k=0.5, min_sigma=0.1, alpha=0.1, min_segment_length=config.segment_length)
+    detected_change_points = []
+    last_cp = 0
+    last_lambda = 0
+    is_last=False
+    kmmodel = load(f'./model/{config.data_name}-km-cusum.pkl')['model']
+    cols = list(data.columns)
+    if "date" in cols:
+        cols.remove("date")
+    elif "timestamp" in cols:
+        cols.remove("timestamp")
+    cols.remove(config.target)
+    cols = cols + [config.target]
+    for i, (_, row) in enumerate(data.iterrows()):
+        value = row[config.target]
+        change_detected, position = detector.update(value)
+        if change_detected:
+            detected_change_points.append(i)
+            # 发送上一个变点到当前变点之间的数据
+            if last_cp < i:  # 确保有数据可发送
+                batch_data=data[last_cp:i]
+                fenlei_data = batch_data[cols].values
+                fenlei_data, _, _ = MinMaxScaler2(fenlei_data, min, max)
+                fenlei_data = fenlei_data[:, -1]
+                fenlei_data = fenlei_data.reshape(1, len(fenlei_data), 1)
+                labels = kmmodel.predict(fenlei_data)
+                model_id = labels[0]
+                print(f"选择模型:{model_id}")
+                if is_adjust:
+                    result_data=batch_data.copy()
+                    sampler.lambda_val =last_lambda
+                else:
+                    result_iloc = sampler.find_key_points(batch_data[config.target].values)
+                    result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
+                print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
+                payload = {
+                    "metadata": {
+                        "length": len(batch_data),
+                        "is_adjust": is_adjust,
+                        "data_name": config.data_name,
+                        "target": config.target,
+                        "model_id": int(model_id),
+                        "is_last": is_last  # 添加结束标记
+                    },
+                    "data": result_data.to_dict(orient='records')
+                }
+                # 第一批数据添加min/max
+                if len(detected_change_points) == 1:
+                    payload["min"] = json.dumps(min.tolist())
+                    payload["max"] = json.dumps(max.tolist())
+                status, message = send2server("10.12.54.122", "5002",conn, payload)
+                # if message==1:
+                #     last_lambda = sampler.lambda_val
+                #     sampler.lambda_val = -1
+                # else:
+                #     is_adjust=False
+                if status==200:
+                    if config.sampler=='random':
+                        print(f"随机采样10%数据")
+                    else:
+                        print(f"采样率{sampler.lambda_val}")
+                count+=1
+            last_cp = i
+    if last_cp < len(data):
+        is_last=True
+        batch_data = data[last_cp:]
+        result_iloc = sampler.find_key_points(batch_data[config.target].values)
+        result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
+        print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
+        payload = {
+            "metadata": {
+                "length": len(batch_data),
+                "is_adjust": is_adjust,
+                "data_name": config.data_name,
+                "target": config.target,
+                "model_id": int(model_id),
                 "is_last": is_last  # 添加结束标记
             },
             "data": result_data.to_dict(orient='records')

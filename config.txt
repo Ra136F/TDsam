@@ -2,6 +2,6 @@ energy T1 0.025  0 20 200  128kbit  动态调整阈值1 次数2
 oil-well-1 T-JUS-CKP  0.1  0.05 100 200 2mbit ori-len(df)
 power power_1s 10 2 100 200 1mbit
 household Voltage   1  0.5(0.1)    10 200 动态调整阈值0.6 次数4 cusumhigh
-PPG  S1_heart_rate_bpm     0.5 0 10 200 动态调整阈值0.8 次数4  固定low
+PPG  S1_heart_rate_bpm     0.5 0 10 200 动态调整阈值0.8 次数4  固定low cusumhigh
 ocean TEMP_2 0.01 0.002 10 200 动态调整阈值0.8 次数4 样本数50
 rain value 1.6 0.6 10 200 cusum固定500

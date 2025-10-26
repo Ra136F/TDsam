@@ -20,6 +20,6 @@ def upload_zip_to_server(zip_file_path, upload_url):
 
 # 使用示例
 zip_file_path = '../result.zip'  # 本地zip文件路径
-upload_url = 'http://192.168.31.59:5000/upload'  # 远程服务器的上传API URL
+upload_url = 'http://10.12.43.200:5000/upload'  # 远程服务器的上传API URL
 
 upload_zip_to_server(zip_file_path, upload_url)
