@@ -8,8 +8,8 @@ from util import data_loading, MinMaxScaler, calculate_gap
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
-    parser.add_argument('-data_name', type=str, default='rain', help="数据集名称")
-    parser.add_argument('-target', type=str, default='value', help="目标特征")
+    parser.add_argument('-data_name', type=str, default='household', help="数据集名称")
+    parser.add_argument('-target', type=str, default='Voltage', help="目标特征")
     parser.add_argument('-lambda_value', type=int, default=0.01, help="采样率")
     parser.add_argument('-mode', type=int, default=0, help="[0,1],不适用GPU、使用GPU")
     parser.add_argument('-url', type=str, default='http://10.12.54.122:5002/', help="服务器地址")
@@ -29,8 +29,8 @@ if __name__ == '__main__':
     print(m1,m2)
     # data,min,max=MinMaxScaler(np.array(data))
     # print(min.shape)
-    plt.plot( data[[args.target]], label='Original Data')
-    plt.legend()
-    plt.show()
+    # plt.plot( data[[args.target]], label='Original Data')
+    # plt.legend()
+    # plt.show()
     # data.to_csv("./data/oil-well-1.csv", index=False, columns=data.columns)
 

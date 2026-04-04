@@ -324,3 +324,53 @@ def clean_floats(obj):
         return [clean_floats(v) for v in obj]
     else:
         return obj
+
+
+class DBP:
+    def __init__(self, m, l, tolerance=0.1):
+        # m: 学习窗口的大小，l: 边缘点的数量
+        self.m = m
+        self.l = l
+        self.tolerance = tolerance
+        self.model = None
+        self.data_buffer = []
+
+    def update_model(self):
+        # 计算模型：使用边缘点的平均斜率
+        data = np.array(self.data_buffer[-self.m:])
+        edge_points_start = data[:self.l]
+        edge_points_end = data[-self.l:]
+
+        avg_start = np.mean(edge_points_start, axis=0)
+        avg_end = np.mean(edge_points_end, axis=0)
+
+        # 计算斜率（即导数）
+        slope = (avg_end - avg_start) / (len(edge_points_end) - 1)
+        self.model = slope
+
+    def predict(self, current_point):
+        # 基于当前模型进行预测
+        if self.model is None:
+            return current_point  # 如果没有模型，直接返回当前值
+        predicted_point = current_point + self.model
+        return predicted_point
+
+    def add_data_point(self, new_data_point):
+        # 将新数据点添加到缓冲区
+        self.data_buffer.append(new_data_point)
+        if len(self.data_buffer) > self.m:
+            self.data_buffer.pop(0)
+
+        # 更新模型
+        if len(self.data_buffer) >= self.m:
+            self.update_model()
+
+    def check_prediction(self, actual_value):
+        # 检查预测值与实际值的误差是否在容忍范围内
+        if self.model is None:
+            return True  # 如果没有模型，认为预测是有效的
+        predicted_value = self.predict(self.data_buffer[-1])
+        if abs(predicted_value - actual_value) <= self.tolerance:
+            return True
+        return False
+

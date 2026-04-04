@@ -18,7 +18,7 @@ from cusum import AdaptiveCUSUM
 from mqt import XenderMQTTClient
 from numbacusum import NumbaCUSUM
 from sampler import TDSampler, RandomSampler, RandomSampler2
-from util import data_loading, getMinMax, send2server, clean_floats, ServerSender, MinMaxScaler2
+from util import data_loading, getMinMax, send2server, clean_floats, ServerSender, MinMaxScaler2, DBP
 
 
 def xender_send_async(config):
@@ -670,3 +670,28 @@ def fenlei_send_loacl(config):
             print(f"采样率{sampler.lambda_val}")
         print("传输完成")
         count+=1
+
+
+def send_DBP(config):
+    folder_path = './data' + '/' + config.data_name
+    data, r_min, r_max = data_loading(folder_path, config.target)
+    conn = http.client.HTTPConnection("10.12.54.122", 5002, timeout=600)
+    dbp = DBP(m=100, l=3, tolerance=0.5)
+    for i, (_, row) in enumerate(data.iterrows()):
+        value = row[config.target]
+        dbp.add_data_point(value)
+
+        # 进行预测并检查是否需要传输
+        predicted_value = dbp.predict(value)
+        print(f"预测值: {predicted_value}, 当前值: {value}")
+        if not dbp.check_prediction(value):
+            payload = {
+                'predicted_value': predicted_value,
+                'actual_value': value,
+                'model': dbp.model.tolist(),  # 将模型（斜率）转换为列表
+                'timestamp': time.time()
+            }
+            send2server("10.12.54.122", "5002", conn, payload)
+            print("发送数据到服务器:")
+        else:
+            print("预测值与实际值差异在容忍范围内，无需传输")
