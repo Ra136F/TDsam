@@ -688,6 +688,7 @@ def send_DBP(config):
             payload = {
                 'predicted_value': predicted_value,
                 'actual_value': value,
+                'data': data.to_dict(orient='records'),
                 'model': dbp.model.tolist(),  # 将模型（斜率）转换为列表
                 'timestamp': time.time()
             }
