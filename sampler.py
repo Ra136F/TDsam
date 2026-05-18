@@ -22,25 +22,25 @@ class TDSampler:  # 客户端采样算法代码
                 if self._is_peak(data, i) or self._is_valley(data, i) or self._has_high_curvature(data, i):
                     key_indices.append(i)
         else:
-            # is_key_point = self._compute_key_points(data, self.lambda_val)
-            # key_indices.extend(i for i in range(1, n - 1) if is_key_point[i])
-            d_data = cuda.to_device(data)
-
-            # 创建一个空的布尔数组，用来保存每个点是否是关键点
-            d_key_flags = cuda.device_array(n, dtype=np.bool_)
-
-            # 计算关键点
-            threads_per_block = 256
-            blocks_per_grid = (n + (threads_per_block - 1)) // threads_per_block
-
-            # 启动 GPU 内核
-            self._compute_key_points[blocks_per_grid, threads_per_block](d_data, self.lambda_val, d_key_flags)
-
-            # 将结果从 GPU 内存拷贝回主机
-            key_flags = d_key_flags.copy_to_host()
-
-            # 根据计算结果提取关键点的索引
-            key_indices.extend(i for i in range(1, n - 1) if key_flags[i])
+            is_key_point = self._compute_key_points_1(data, self.lambda_val)
+            key_indices.extend(i for i in range(1, n - 1) if is_key_point[i])
+            # d_data = cuda.to_device(data)
+            #
+            # # 创建一个空的布尔数组，用来保存每个点是否是关键点
+            # d_key_flags = cuda.device_array(n, dtype=np.bool_)
+            #
+            # # 计算关键点
+            # threads_per_block = 256
+            # blocks_per_grid = (n + (threads_per_block - 1)) // threads_per_block
+            #
+            # # 启动 GPU 内核
+            # self._compute_key_points_2[blocks_per_grid, threads_per_block](d_data, self.lambda_val, d_key_flags)
+            #
+            # # 将结果从 GPU 内存拷贝回主机
+            # key_flags = d_key_flags.copy_to_host()
+            #
+            # # 根据计算结果提取关键点的索引
+            # key_indices.extend(i for i in range(1, n - 1) if key_flags[i])
 
 
         return sorted(key_indices)
@@ -62,7 +62,7 @@ class TDSampler:  # 客户端采样算法代码
 
     # @staticmethod
     # @njit(parallel=True)
-    # def _compute_key_points(data: np.ndarray, lambda_val: float) -> np.ndarray:
+    # def _compute_key_points_1(data: np.ndarray, lambda_val: float) -> np.ndarray:
     #     """并行计算所有点是否为关键点（Numba加速）"""
     #     n = len(data)
     #     # 创建布尔数组标记关键点
@@ -86,7 +86,7 @@ class TDSampler:  # 客户端采样算法代码
     #     return key_flags
     @staticmethod
     @cuda.jit
-    def _compute_key_points(data: np.ndarray, lambda_val: float, key_flags: np.ndarray):
+    def _compute_key_points_2(data: np.ndarray, lambda_val: float, key_flags: np.ndarray):
         """
         GPU 内核：并行计算每个数据点是否为关键点
         1. 峰值: 大于前后点加上 lambda_val
