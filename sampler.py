@@ -60,55 +60,55 @@ class TDSampler:  # 客户端采样算法代码
     def _has_high_curvature(self, data: np.ndarray, i: int) -> bool:
         return abs(data[i + 1] - 2 * data[i] + data[i - 1]) > self.lambda_val
 
-    # @staticmethod
-    # @njit(parallel=True)
-    # def _compute_key_points_1(data: np.ndarray, lambda_val: float) -> np.ndarray:
-    #     """并行计算所有点是否为关键点（Numba加速）"""
-    #     n = len(data)
-    #     # 创建布尔数组标记关键点
-    #     key_flags = np.zeros(n, dtype=np.bool_)
-    #
-    #     # 并行遍历所有内部点（首尾点已单独处理）
-    #     for i in prange(1, n - 1):
-    #         # 检查是否为峰值
-    #         is_peak = (data[i] > data[i - 1] + lambda_val) and (data[i] > data[i + 1] + lambda_val)
-    #
-    #         # 检查是否为谷值
-    #         is_valley = (data[i] < data[i - 1] - lambda_val) and (data[i] < data[i + 1] - lambda_val)
-    #
-    #         # 检查是否为高曲率点
-    #         curvature = np.abs(data[i + 1] - 2 * data[i] + data[i - 1])
-    #         is_high_curvature = curvature > lambda_val
-    #
-    #         # 任何条件满足则标记为关键点
-    #         key_flags[i] = is_peak or is_valley or is_high_curvature
-    #
-    #     return key_flags
     @staticmethod
-    @cuda.jit
-    def _compute_key_points_2(data: np.ndarray, lambda_val: float, key_flags: np.ndarray):
-        """
-        GPU 内核：并行计算每个数据点是否为关键点
-        1. 峰值: 大于前后点加上 lambda_val
-        2. 谷值: 小于前后点减去 lambda_val
-        3. 高曲率点：绝对二阶差值大于 lambda_val
-        """
-        idx = cuda.grid(1)  # 获取当前线程的唯一索引
+    @njit(parallel=True)
+    def _compute_key_points_1(data: np.ndarray, lambda_val: float) -> np.ndarray:
+        """并行计算所有点是否为关键点（Numba加速）"""
         n = len(data)
+        # 创建布尔数组标记关键点
+        key_flags = np.zeros(n, dtype=np.bool_)
 
-        if 1 <= idx < n - 1:  # 确保索引在有效范围内
-            # 判断是否为峰值
-            is_peak = (data[idx] > data[idx - 1] + lambda_val) and (data[idx] > data[idx + 1] + lambda_val)
+        # 并行遍历所有内部点（首尾点已单独处理）
+        for i in prange(1, n - 1):
+            # 检查是否为峰值
+            is_peak = (data[i] > data[i - 1] + lambda_val) and (data[i] > data[i + 1] + lambda_val)
 
-            # 判断是否为谷值
-            is_valley = (data[idx] < data[idx - 1] - lambda_val) and (data[idx] < data[idx + 1] - lambda_val)
+            # 检查是否为谷值
+            is_valley = (data[i] < data[i - 1] - lambda_val) and (data[i] < data[i + 1] - lambda_val)
 
-            # 判断是否为高曲率点
-            curvature = abs(data[idx + 1] - 2 * data[idx] + data[idx - 1])
+            # 检查是否为高曲率点
+            curvature = np.abs(data[i + 1] - 2 * data[i] + data[i - 1])
             is_high_curvature = curvature > lambda_val
 
             # 任何条件满足则标记为关键点
-            key_flags[idx] = is_peak or is_valley or is_high_curvature
+            key_flags[i] = is_peak or is_valley or is_high_curvature
+
+        return key_flags
+    # @staticmethod
+    # @cuda.jit
+    # def _compute_key_points_2(data: np.ndarray, lambda_val: float, key_flags: np.ndarray):
+    #     """
+    #     GPU 内核：并行计算每个数据点是否为关键点
+    #     1. 峰值: 大于前后点加上 lambda_val
+    #     2. 谷值: 小于前后点减去 lambda_val
+    #     3. 高曲率点：绝对二阶差值大于 lambda_val
+    #     """
+    #     idx = cuda.grid(1)  # 获取当前线程的唯一索引
+    #     n = len(data)
+    #
+    #     if 1 <= idx < n - 1:  # 确保索引在有效范围内
+    #         # 判断是否为峰值
+    #         is_peak = (data[idx] > data[idx - 1] + lambda_val) and (data[idx] > data[idx + 1] + lambda_val)
+    #
+    #         # 判断是否为谷值
+    #         is_valley = (data[idx] < data[idx - 1] - lambda_val) and (data[idx] < data[idx + 1] - lambda_val)
+    #
+    #         # 判断是否为高曲率点
+    #         curvature = abs(data[idx + 1] - 2 * data[idx] + data[idx - 1])
+    #         is_high_curvature = curvature > lambda_val
+    #
+    #         # 任何条件满足则标记为关键点
+    #         key_flags[idx] = is_peak or is_valley or is_high_curvature
 
 
 
