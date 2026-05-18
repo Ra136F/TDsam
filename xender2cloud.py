@@ -18,7 +18,7 @@ from cusum import AdaptiveCUSUM
 from mqt import XenderMQTTClient
 from numbacusum import NumbaCUSUM
 from sampler import TDSampler, RandomSampler, RandomSampler2
-from util import data_loading, getMinMax, send2server, clean_floats, ServerSender, MinMaxScaler2, DBP
+from util import data_loading, getMinMax, send2server, clean_floats, ServerSender, MinMaxScaler2, DBP, init_args
 
 
 def xender_send_async(config):
@@ -573,6 +573,56 @@ def fenlei_send4(config):
         print("传输完成")
         count+=1
 
+def gpu_test(config):
+    names=["energy","household","ocean","rain","ppg"]
+    for data_name in names:
+        config.data_name = data_name
+        config=init_args(config)
+        print(config.lambda_value)
+        folder_path = './data' + '/' + config.data_name
+        data, r_min, r_max = data_loading(folder_path, config.target)
+        print("CPU采样开始====")
+        start = time.time()
+        excute_sample(data,config,0)
+        end=time.time()
+        print(f"cpu采样{end-start}s")
+        print("CPU采样结束====")
+
+        print("GPU采样开始====")
+        start = time.time()
+        excute_sample(data, config, 1)
+        end = time.time()
+        print(f"gpu采样{end - start}s")
+        print("GPU采样结束====")
+
+
+def excute_sample(data,config,mode):
+    sampler = TDSampler(initial_lambda=config.lambda_value, gpu=mode)
+    count = 0
+    detector = AdaptiveCUSUM(k=config.k, drift_k=0.5, min_sigma=0.1, alpha=0.1,
+                             min_segment_length=config.segment_length)
+    detected_change_points = []
+    last_cp = 0
+    for i, (_, row) in enumerate(data.iterrows()):
+        value = row[config.target]
+        change_detected, position = detector.update(value)
+        if change_detected:
+            detected_change_points.append(i)
+            # 发送上一个变点到当前变点之间的数据
+            if last_cp < i:  # 确保有数据可发送
+                batch_data = data[last_cp:i]
+                result_iloc = sampler.find_key_points(batch_data[config.target].values)
+                result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
+                print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
+                count += 1
+            last_cp = i
+    if last_cp < len(data):
+        batch_data = data[last_cp:]
+        result_iloc = sampler.find_key_points(batch_data[config.target].values)
+        result_data = batch_data.iloc[result_iloc].reset_index(drop=True)
+        print(f"第{count + 1}次采样,原始长度{len(batch_data)},采样长度:{len(result_data)}")
+        print("传输完成")
+        count += 1
 def fenlei_send_loacl(config):
     folder_path = './data' + '/' + config.data_name
     data, r_min, r_max = data_loading(folder_path, config.target)

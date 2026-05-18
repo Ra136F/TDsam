@@ -9,11 +9,11 @@ from all2cloud import all_send
 from simplets2cloud import sim_send
 from util import init_args
 from xender2cloud import xender_send, fenlei_send, fenlei_send2, fenlei_send3, fenlei_send4, \
-    xender_send_async, fenlei_send_loacl, send_DBP
+    xender_send_async, fenlei_send_loacl, send_DBP, gpu_test
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
-    parser.add_argument('-method', type=str, default='d', help="传输方式(全传输(all、a) xender(x) 固定窗口(guding、g) cusum(c)),DBP(d)")
+    parser.add_argument('-method', type=str, default='gpu', help="传输方式(全传输(all、a) xender(x) 固定窗口(guding、g) cusum(c)),DBP(d)")
     parser.add_argument('-data_name', type=str, default='energy', help="数据集名称")
     parser.add_argument('-target', type=str, default='T1', help="目标特征")
     parser.add_argument('-lambda_value', type=float, default=0.25, help="采样率")
@@ -46,6 +46,8 @@ if __name__ == '__main__':
     elif args.method == 'c' or args.method == 'cusum':#cusum
         fenlei_send4(args)
     elif args.method == 'd' or args.method == 'dg':send_DBP(args)
+    elif args.method=="gpu":
+        gpu_test(args)
     else:#测试
         local_fenlei_guding(args)#
     end_time = time.time()
