@@ -13,7 +13,7 @@ from xender2cloud import xender_send, fenlei_send, fenlei_send2, fenlei_send3, f
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='客户端传输')
-    parser.add_argument('-method', type=str, default='gpu', help="传输方式(全传输(all、a) xender(x) 固定窗口(guding、g) cusum(c)),DBP(d)")
+    parser.add_argument('-method', type=str, default='g', help="传输方式(全传输(all、a) xender(x) 固定窗口(guding、g) cusum(c)),DBP(d)")
     parser.add_argument('-data_name', type=str, default='energy', help="数据集名称")
     parser.add_argument('-target', type=str, default='T1', help="目标特征")
     parser.add_argument('-lambda_value', type=float, default=0.25, help="采样率")
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     start_time = time.time()
-
+    count_time=0
     args=init_args(args)
     if args.method == 'simplets' or args.method == 's':#无作用
         sim_send(args)
@@ -42,9 +42,9 @@ if __name__ == '__main__':
     elif args.method == 'all' or args.method == 'a':#全传输
         all_send(args)
     elif args.method == 'guding' or args.method == 'g':#guding
-        fenlei_send(args)
+        count_time=fenlei_send(args)
     elif args.method == 'c' or args.method == 'cusum':#cusum
-        fenlei_send4(args)
+        count_time=fenlei_send4(args)
     elif args.method == 'd' or args.method == 'dg':send_DBP(args)
     elif args.method=="gpu":
         gpu_test(args)
@@ -53,9 +53,10 @@ if __name__ == '__main__':
     end_time = time.time()
     duration = end_time - start_time
     print(f"传输完成,共花费:{duration: .4f} s")
+    print(f"分组总时间{count_time: .4f} s")
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # 格式化日志条目
-    log_entry = f"[{timestamp}] 传输方法: {args.method}, 耗时: {duration:.4f} 秒\n"
+    log_entry = f"[{timestamp}] 传输方法: {args.method}, 耗时: {duration:.4f} 秒,分组时间:{count_time}\n"
     file_path = f"./result/{args.data_name}/"
     if not os.path.exists(file_path):
         os.makedirs(file_path)

@@ -287,8 +287,12 @@ def fenlei_send(config):
         total_batches += 1
     print(f"总批次:{total_batches}")
     last_lambda = 0
+    count_time=0
     for i in range(0, total_rows, batch_rows):
+        start_time_1=time.time()
         batch_data = data[i:i + batch_rows]
+        end_time_1 = time.time()
+        count_time =count_time+( end_time_1 - start_time_1)
         if is_adjust:
             result_data = batch_data.copy()
             # result_iloc = sampler.find_key_points(batch_data[config.target].values)
@@ -323,6 +327,7 @@ def fenlei_send(config):
         if status==200:
             print(f"采样率{sampler.lambda_val}")
         count += 1
+    return count_time
 
 
 
@@ -492,6 +497,7 @@ def fenlei_send3(config):
 def fenlei_send4(config):
     folder_path = './data' + '/' + config.data_name
     data, r_min, r_max = data_loading(folder_path, config.target)
+    print()
     min,max=getMinMax(data,config.target)
     print(min)
     print(f'max{r_max},min:{r_min}')
@@ -506,14 +512,20 @@ def fenlei_send4(config):
     last_cp = 0
     last_lambda = 0
     is_last=False
+    #分组总时间
+    count_time=0
     for i, (_, row) in enumerate(data.iterrows()):
         value = row[config.target]
+        #记录分组时间
+        start_time_1 = time.time()
         change_detected, position = detector.update(value)
         if change_detected:
             detected_change_points.append(i)
             # 发送上一个变点到当前变点之间的数据
             if last_cp < i:  # 确保有数据可发送
                 batch_data=data[last_cp:i]
+                end_time_1 = time.time()
+                count_time=count_time+(end_time_1 - start_time_1)
                 if is_adjust:
                     result_data=batch_data.copy()
                     # result_iloc = sampler.find_key_points(batch_data[config.target].values)
@@ -572,6 +584,7 @@ def fenlei_send4(config):
             print(f"采样率{sampler.lambda_val}")
         print("传输完成")
         count+=1
+        return count_time
 
 def gpu_test(config):
     names=["energy","household","ocean","rain","ppg"]
@@ -581,19 +594,20 @@ def gpu_test(config):
         print(config.lambda_value)
         folder_path = './data' + '/' + config.data_name
         data, r_min, r_max = data_loading(folder_path, config.target)
-        print("CPU采样开始====")
-        start = time.time()
-        excute_sample(data,config,0)
-        end=time.time()
-        print(f"cpu采样{end-start}s")
-        print("CPU采样结束====")
-
-        print("GPU采样开始====")
-        start = time.time()
-        excute_sample(data, config, 1)
-        end = time.time()
-        print(f"gpu采样{end - start}s")
-        print("GPU采样结束====")
+        print(len(data))
+        # print("CPU采样开始====")
+        # start = time.time()
+        # excute_sample(data,config,0)
+        # end=time.time()
+        # print(f"cpu采样{end-start}s")
+        # print("CPU采样结束====")
+        #
+        # print("GPU采样开始====")
+        # start = time.time()
+        # excute_sample(data, config, 1)
+        # end = time.time()
+        # print(f"gpu采样{end - start}s")
+        # print("GPU采样结束====")
 
 
 def excute_sample(data,config,mode):
